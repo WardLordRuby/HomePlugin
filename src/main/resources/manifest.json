@@ -1,0 +1,6 @@
+{
+  "Group": "com.wardlordruby",
+  "Name": "HomePlugin",
+  "Version": "0.1.0",
+  "Main": "com.wardlordruby.plugin.HomePlugin"
+}
