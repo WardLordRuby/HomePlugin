@@ -45,7 +45,7 @@ public class HomeCommand extends AbstractPlayerCommand {
             playerRef.sendMessage(Message.translation("server.commands.teleport.worldNotLoaded"));
             return;
         }
-        
+
         TeleportHistory history = store.getComponent(ref, TeleportHistory.getComponentType());
 
         if (history == null) {
@@ -73,7 +73,13 @@ public class HomeCommand extends AbstractPlayerCommand {
             @Nonnull PlayerRef playerRef,
             @Nonnull World world
         ) {
-            plugin.insertHome(world, playerRef);
+            String err = plugin.insertHome(world, playerRef);
+
+            if (err != null) {
+                playerRef.sendMessage(Message.raw(err));
+                return;
+            }
+
             playerRef.sendMessage(Message.raw("Home set!"));
         }
     }
