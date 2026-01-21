@@ -20,7 +20,7 @@ public class HomeCommand extends AbstractPlayerCommand {
 
     public HomeCommand(HomePlugin parent) {
         super("home", "Teleport back to your home");
-        this.addSubCommand(new SetHomeCommand(parent));
+        this.addSubCommand(new SetHomeCommand());
         this.plugin = parent;
     }
 
@@ -56,6 +56,26 @@ public class HomeCommand extends AbstractPlayerCommand {
         Transform currTransform = playerRef.getTransform();
         history.append(world, currTransform.getPosition().clone(), currTransform.getRotation().clone(), "");
         store.addComponent(ref, Teleport.getComponentType(), Teleport.createForPlayer(targetWorld, playerHome.position, playerHome.rotation));
+    }
+
+    private class SetHomeCommand extends AbstractPlayerCommand {
+
+        public SetHomeCommand() {
+            super("set", "Set home to your current position");
+            this.requirePermission("com.wardlordruby.homeplugin.command.home");
+        }
+
+        @Override
+        protected void execute(
+            @Nonnull CommandContext commandContext,
+            @Nonnull Store<EntityStore> store,
+            @Nonnull Ref<EntityStore> ref,
+            @Nonnull PlayerRef playerRef,
+            @Nonnull World world
+        ) {
+            plugin.insertHome(world, playerRef);
+            playerRef.sendMessage(Message.raw("Home set!"));
+        }
     }
 }
 
