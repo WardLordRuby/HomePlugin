@@ -1,11 +1,11 @@
 package com.wardlordruby.plugin;
 
+import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 
-import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,17 +13,17 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class HomePlugin extends JavaPlugin {
+    public static final HytaleLogger logger = HytaleLogger.get(HomePlugin.class.getSimpleName());
 
-    private static final String HOMES_FILE = "homes.json";
     private static final String TMP_WORLD_INDICATOR = "instance-";
 
-    private final File homeFile;
-    private final ConcurrentHashMap<UUID, TeleportEntry> homeMap;
+    private final JsonFileManager fileManager;
+    private final @Nonnull ConcurrentHashMap<UUID, TeleportEntry> homeMap;
 
     public HomePlugin(@Nonnull JavaPluginInit init) {
         super(init);
-        this.homeFile = getDataDirectory().resolve(HOMES_FILE).toFile();
-        this.homeMap = HomeManager.loadHomes(homeFile);
+        this.fileManager = new JsonFileManager(getDataDirectory());
+        this.homeMap = fileManager.read(JsonResource.HOMES);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class HomePlugin extends JavaPlugin {
 
     @Override
     protected void shutdown() {
-        HomeManager.saveHomes(homeMap, homeFile);
+        fileManager.write(homeMap, JsonResource.HOMES);
         super.shutdown();
     }
 
