@@ -1,4 +1,4 @@
-package com.wardlordruby.plugin;
+package com.wardlordruby.plugin.models;
 
 import com.google.gson.reflect.TypeToken;
 

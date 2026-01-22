@@ -1,4 +1,7 @@
-package com.wardlordruby.plugin;
+package com.wardlordruby.plugin.systems;
+
+import com.wardlordruby.plugin.HomePlugin;
+import com.wardlordruby.plugin.services.TeleportHistoryService;
 
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;

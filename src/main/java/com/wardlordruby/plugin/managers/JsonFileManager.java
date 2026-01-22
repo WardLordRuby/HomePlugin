@@ -1,4 +1,7 @@
-package com.wardlordruby.plugin;
+package com.wardlordruby.plugin.managers;
+
+import com.wardlordruby.plugin.HomePlugin;
+import com.wardlordruby.plugin.models.JsonResource;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

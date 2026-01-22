@@ -1,4 +1,4 @@
-package com.wardlordruby.plugin;
+package com.wardlordruby.plugin.models;
 
 import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.math.vector.Vector3d;

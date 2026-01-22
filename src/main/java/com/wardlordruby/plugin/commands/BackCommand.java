@@ -1,4 +1,4 @@
-package com.wardlordruby.plugin;
+package com.wardlordruby.plugin.commands;
 
 import com.hypixel.hytale.builtin.teleport.components.TeleportHistory;
 import com.hypixel.hytale.component.Ref;
