@@ -25,7 +25,12 @@ Added commands:
 | ---------------------------- | ----------------------------------------- | ----------------------------------------------------------- |
 | `/home`                      | com.wardlordruby.homeplugin.command.home  | Teleports player to their set home                          |
 | `/home set`                  | com.wardlordruby.homeplugin.command.home  | Sets the players home to their current position             |
-| `/back`                      | com.wardlordruby.homeplugin.command.back  | Teleports the player to the last entry in `TelePortHistory` |
+| [`/back`](#back)             | com.wardlordruby.homeplugin.command.back  | Teleports the player to the last entry in `TeleportHistory` |
+
+## Back
+
+The ability for players to use back on death can be configured globally via 'config.json' where it is defaulted to true. You can also grant
+this functionality to groups or specific players by assigning them the permission 'com.wardlordruby.homeplugin.backOnDeath'.
 
 ## License
 
