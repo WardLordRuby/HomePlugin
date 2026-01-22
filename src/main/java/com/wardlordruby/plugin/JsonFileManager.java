@@ -23,7 +23,7 @@ public class JsonFileManager {
 
     private void initializeDirectory() {
         if (!baseDirectory.exists() && !baseDirectory.mkdirs()) {
-            HomePlugin.logger.atSevere().log("Failed to create directory: " + baseDirectory);
+            HomePlugin.LOGGER.atSevere().log("Failed to create directory: " + baseDirectory.getPath());
             throw new IllegalStateException("Cannot initialize plugin directory");
         }
     }
@@ -33,9 +33,9 @@ public class JsonFileManager {
 
         try (Writer writer = new FileWriter(file)) {
             gson.toJson(data, resource.type(), writer);
-            HomePlugin.logger.atInfo().log(resource.displayName() + " saved");
+            HomePlugin.LOGGER.atInfo().log(resource.displayName() + " saved");
         } catch (Exception e) {
-            HomePlugin.logger.atSevere().log("Failed to write: " + file.getAbsolutePath() + "\n" + e.getMessage());
+            HomePlugin.LOGGER.atSevere().log("Failed to write: " + file.getAbsolutePath() + "\n" + e.getMessage());
         }
     }
 
@@ -47,11 +47,11 @@ public class JsonFileManager {
         try (Reader reader = new FileReader(file)) {
             T data = gson.fromJson(reader, resource.type());
             if (data == null) return resource.createDefault(); else {
-                HomePlugin.logger.atInfo().log(resource.displayName() + " loaded");
+                HomePlugin.LOGGER.atInfo().log(resource.displayName() + " loaded");
                 return data;
             }
         } catch (Exception e) {
-            HomePlugin.logger.atSevere().log("Failed to read: " + file.getAbsolutePath() + "\n" + e.getMessage());
+            HomePlugin.LOGGER.atSevere().log("Failed to read: " + file.getAbsolutePath() + "\n" + e.getMessage());
             throw new IllegalStateException("Cannot read data file: " + resource.fileName(), e);
         }
     }

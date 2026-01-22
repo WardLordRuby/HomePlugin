@@ -30,4 +30,12 @@ public final record JsonResource<T>(
             new TypeToken<ConcurrentHashMap<UUID, TeleportEntry>>() {}.getType(),
             ConcurrentHashMap::new
         );
+
+    public static final JsonResource<PluginConfig> CONFIG =
+        new JsonResource<>(
+            "config.json",
+            "Plugin config",
+            PluginConfig.class,
+            PluginConfig::new
+        );
 }

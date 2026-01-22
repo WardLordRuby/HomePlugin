@@ -13,10 +13,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class HomePlugin extends JavaPlugin {
-    public static final HytaleLogger logger = HytaleLogger.get(HomePlugin.class.getSimpleName());
+    public static final String NAME = HomePlugin.class.getSimpleName();
+    public static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
 
     private static final String TMP_WORLD_INDICATOR = "instance-";
 
+    private static PluginConfig config;
     private final JsonFileManager fileManager;
     private final @Nonnull ConcurrentHashMap<UUID, TeleportEntry> homeMap;
 
@@ -24,6 +26,7 @@ public class HomePlugin extends JavaPlugin {
         super(init);
         this.fileManager = new JsonFileManager(getDataDirectory());
         this.homeMap = fileManager.read(JsonResource.HOMES);
+        config = fileManager.read(JsonResource.CONFIG);
     }
 
     @Override
@@ -31,12 +34,21 @@ public class HomePlugin extends JavaPlugin {
         super.setup();
         this.getCommandRegistry().registerCommand(new HomeCommand(this));
         this.getCommandRegistry().registerCommand(new BackCommand());
+        this.getEntityStoreRegistry().registerSystem(new StoreDeathLocationSystem());
     }
 
     @Override
     protected void shutdown() {
         fileManager.write(homeMap, JsonResource.HOMES);
+        fileManager.write(getConfig(), JsonResource.CONFIG);
         super.shutdown();
+    }
+
+    public static @Nonnull PluginConfig getConfig() {
+        if (config == null) {
+            throw new IllegalStateException(NAME + " config not yet loaded");
+        }
+        return config;
     }
 
     public @Nullable TeleportEntry getPlayerHome(@Nonnull PlayerRef playerRef) {

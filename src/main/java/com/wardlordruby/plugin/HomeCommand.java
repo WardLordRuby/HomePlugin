@@ -1,9 +1,7 @@
 package com.wardlordruby.plugin;
 
-import com.hypixel.hytale.builtin.teleport.components.TeleportHistory;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
@@ -46,20 +44,12 @@ public class HomeCommand extends AbstractPlayerCommand {
             return;
         }
 
-        TeleportHistory history = store.getComponent(ref, TeleportHistory.getComponentType());
-
-        if (history == null) {
-            history = new TeleportHistory();
-            store.addComponent(ref, TeleportHistory.getComponentType(), history);
-        }
-
-        Transform currTransform = playerRef.getTransform();
-        history.append(world, currTransform.getPosition().clone(), currTransform.getRotation().clone(), "");
-        store.addComponent(ref, Teleport.getComponentType(), Teleport.createForPlayer(targetWorld, playerHome.position, playerHome.rotation));
+        TeleportHistoryService.append(ref, store, world, playerRef.getTransform());
+        Teleport playerTeleport = Teleport.createForPlayer(targetWorld, playerHome.position, playerHome.rotation);
+        store.addComponent(ref, Teleport.getComponentType(), playerTeleport);
     }
 
     private class SetHomeCommand extends AbstractPlayerCommand {
-
         public SetHomeCommand() {
             super("set", "Set home to your current position");
             this.requirePermission("com.wardlordruby.homeplugin.command.home");
@@ -84,4 +74,3 @@ public class HomeCommand extends AbstractPlayerCommand {
         }
     }
 }
-
