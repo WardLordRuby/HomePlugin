@@ -1,4 +1,4 @@
-package com.wardlordruby.plugin.services;
+package com.wardlordruby.plugin.utils;
 
 import com.hypixel.hytale.builtin.teleport.components.TeleportHistory;
 import com.hypixel.hytale.component.Ref;
@@ -9,7 +9,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 
-public final class TeleportHistoryService {
+public final class TeleportHistoryUtil {
     public static void append(
         @Nonnull Ref<EntityStore> ref,
         @Nonnull Store<EntityStore> store,

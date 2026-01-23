@@ -1,4 +1,4 @@
-package com.wardlordruby.plugin.managers;
+package com.wardlordruby.plugin.services;
 
 import com.wardlordruby.plugin.HomePlugin;
 import com.wardlordruby.plugin.models.JsonResource;
@@ -15,11 +15,11 @@ import java.nio.file.Path;
 
 import javax.annotation.Nonnull;
 
-public class JsonFileManager {
+public class JsonStorageService {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private final File baseDirectory;
 
-    public JsonFileManager(@Nonnull Path baseDirectory) {
+    public JsonStorageService(@Nonnull Path baseDirectory) {
         this.baseDirectory = baseDirectory.toFile();
         initializeDirectory();
     }

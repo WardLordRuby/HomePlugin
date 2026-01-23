@@ -1,10 +1,12 @@
 package com.wardlordruby.plugin.managers;
 
-import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.world.World;
+import com.wardlordruby.plugin.services.JsonStorageService;
 import com.wardlordruby.plugin.models.HomeMap;
 import com.wardlordruby.plugin.models.JsonResource;
 import com.wardlordruby.plugin.models.TeleportEntry;
+
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -17,7 +19,7 @@ public class PlayerHomeManager {
         this.homeMap = map;
     }
 
-    public void write(@Nonnull JsonFileManager fileManager) {
+    public void write(@Nonnull JsonStorageService fileManager) {
         fileManager.write(homeMap, JsonResource.HOMES);
     }
 

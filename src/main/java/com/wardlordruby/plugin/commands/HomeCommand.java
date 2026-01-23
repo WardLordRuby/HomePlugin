@@ -2,7 +2,7 @@ package com.wardlordruby.plugin.commands;
 
 import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.managers.PlayerHomeManager;
-import com.wardlordruby.plugin.services.TeleportHistoryService;
+import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -48,7 +48,7 @@ public class HomeCommand extends AbstractPlayerCommand {
             return;
         }
 
-        TeleportHistoryService.append(ref, store, world, playerRef.getTransform());
+        TeleportHistoryUtil.append(ref, store, world, playerRef.getTransform());
         Teleport playerTeleport = Teleport.createForPlayer(targetWorld, playerHome.position, playerHome.rotation);
         store.addComponent(ref, Teleport.getComponentType(), playerTeleport);
     }

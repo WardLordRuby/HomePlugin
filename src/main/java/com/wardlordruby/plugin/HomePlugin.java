@@ -2,7 +2,7 @@ package com.wardlordruby.plugin;
 
 import com.wardlordruby.plugin.commands.BackCommand;
 import com.wardlordruby.plugin.commands.HomeCommand;
-import com.wardlordruby.plugin.managers.JsonFileManager;
+import com.wardlordruby.plugin.services.JsonStorageService;
 import com.wardlordruby.plugin.managers.PlayerHomeManager;
 import com.wardlordruby.plugin.models.PluginConfig;
 import com.wardlordruby.plugin.models.JsonResource;
@@ -25,12 +25,12 @@ public class HomePlugin extends JavaPlugin {
     @SuppressWarnings("null") // Read will either throw or return a Nonnull
     private static @Nonnull PluginConfig config;
 
-    private final @Nonnull JsonFileManager fileManager;
+    private final @Nonnull JsonStorageService fileManager;
     private @Nullable PlayerHomeManager playerHomes;
 
     public HomePlugin(@Nonnull JavaPluginInit init) {
         super(init);
-        this.fileManager = new JsonFileManager(getDataDirectory());
+        this.fileManager = new JsonStorageService(getDataDirectory());
         config = fileManager.read(JsonResource.CONFIG);
         if (config.enabledModules.home) this.playerHomes = new PlayerHomeManager(fileManager.read(JsonResource.HOMES));
     }
