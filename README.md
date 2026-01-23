@@ -19,6 +19,8 @@ Copy the built JAR file to your Hytale server's `mods/` directory.
 
 ## Usage
 
+This plugin is split into modules, each of which can be loaded independently. This can be configured from within 'config.json'.  
+
 Added commands:
 
 | Commands                     | permission                                | Description                                                 |

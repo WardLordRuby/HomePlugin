@@ -1,11 +1,11 @@
 package com.wardlordruby.plugin;
 
+import com.wardlordruby.plugin.commands.BackCommand;
+import com.wardlordruby.plugin.commands.HomeCommand;
 import com.wardlordruby.plugin.managers.JsonFileManager;
 import com.wardlordruby.plugin.models.PluginConfig;
 import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.models.JsonResource;
-import com.wardlordruby.plugin.commands.HomeCommand;
-import com.wardlordruby.plugin.commands.BackCommand;
 import com.wardlordruby.plugin.systems.StoreDeathLocationSystem;
 
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -33,21 +33,25 @@ public class HomePlugin extends JavaPlugin {
     public HomePlugin(@Nonnull JavaPluginInit init) {
         super(init);
         this.fileManager = new JsonFileManager(getDataDirectory());
-        this.homeMap = fileManager.read(JsonResource.HOMES);
         config = fileManager.read(JsonResource.CONFIG);
+        this.homeMap = config.enabledModules.home
+            ? fileManager.read(JsonResource.HOMES)
+            : JsonResource.HOMES.createDefault();
     }
 
     @Override
     protected void setup() {
         super.setup();
-        this.getCommandRegistry().registerCommand(new HomeCommand(this));
-        this.getCommandRegistry().registerCommand(new BackCommand());
-        this.getEntityStoreRegistry().registerSystem(new StoreDeathLocationSystem());
+        if (config.enabledModules.home) this.getCommandRegistry().registerCommand(new HomeCommand(this));
+        if (config.enabledModules.back) {
+            this.getCommandRegistry().registerCommand(new BackCommand());
+            this.getEntityStoreRegistry().registerSystem(new StoreDeathLocationSystem());
+        }
     }
 
     @Override
     protected void shutdown() {
-        fileManager.write(homeMap, JsonResource.HOMES);
+        if (config.enabledModules.home) fileManager.write(homeMap, JsonResource.HOMES);
         fileManager.write(getConfig(), JsonResource.CONFIG);
         super.shutdown();
     }
