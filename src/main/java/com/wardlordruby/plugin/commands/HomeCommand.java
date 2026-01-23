@@ -1,7 +1,7 @@
 package com.wardlordruby.plugin.commands;
 
-import com.wardlordruby.plugin.HomePlugin;
 import com.wardlordruby.plugin.models.TeleportEntry;
+import com.wardlordruby.plugin.managers.PlayerHomeManager;
 import com.wardlordruby.plugin.services.TeleportHistoryService;
 
 import com.hypixel.hytale.component.Ref;
@@ -18,12 +18,12 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import javax.annotation.Nonnull;
 
 public class HomeCommand extends AbstractPlayerCommand {
-    private final HomePlugin plugin;
+    private final @Nonnull PlayerHomeManager playerHomes;
 
-    public HomeCommand(HomePlugin parent) {
+    public HomeCommand(@Nonnull PlayerHomeManager homeManager) {
         super("home", "Teleport back to your home");
         this.addSubCommand(new SetHomeCommand());
-        this.plugin = parent;
+        this.playerHomes = homeManager;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class HomeCommand extends AbstractPlayerCommand {
         @Nonnull PlayerRef playerRef,
         @Nonnull World world
     ) {
-        TeleportEntry playerHome = plugin.getPlayerHome(playerRef);
+        TeleportEntry playerHome = playerHomes.get(playerRef);
 
         if (playerHome == null) {
             playerRef.sendMessage(Message.raw("Use `/home set` to update your home location"));
@@ -67,7 +67,7 @@ public class HomeCommand extends AbstractPlayerCommand {
             @Nonnull PlayerRef playerRef,
             @Nonnull World world
         ) {
-            String err = plugin.insertHome(world, playerRef);
+            String err = playerHomes.insert(world, playerRef);
 
             if (err != null) {
                 playerRef.sendMessage(Message.raw(err));
