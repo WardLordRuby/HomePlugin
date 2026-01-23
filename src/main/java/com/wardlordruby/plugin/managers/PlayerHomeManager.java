@@ -2,20 +2,18 @@ package com.wardlordruby.plugin.managers;
 
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
+import com.wardlordruby.plugin.models.HomeMap;
 import com.wardlordruby.plugin.models.JsonResource;
 import com.wardlordruby.plugin.models.TeleportEntry;
-
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class PlayerHomeManager {
     private static final String TMP_WORLD_INDICATOR = "instance-";
-    private @Nonnull ConcurrentHashMap<UUID, TeleportEntry> homeMap;
+    private @Nonnull HomeMap homeMap;
 
-    public PlayerHomeManager(@Nonnull ConcurrentHashMap<UUID, TeleportEntry> map) {
+    public PlayerHomeManager(@Nonnull HomeMap map) {
         this.homeMap = map;
     }
 

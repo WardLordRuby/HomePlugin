@@ -1,10 +1,6 @@
 package com.wardlordruby.plugin.models;
 
-import com.google.gson.reflect.TypeToken;
-
 import java.lang.reflect.Type;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
@@ -23,12 +19,12 @@ public final record JsonResource<T>(
         return value;
     }
 
-    public static final JsonResource<ConcurrentHashMap<UUID, TeleportEntry>> HOMES =
+    public static final JsonResource<HomeMap> HOMES =
         new JsonResource<>(
             "homes.json",
             "Player homes",
-            new TypeToken<ConcurrentHashMap<UUID, TeleportEntry>>() {}.getType(),
-            ConcurrentHashMap::new
+            HomeMap.class,
+            HomeMap::new
         );
 
     public static final JsonResource<PluginConfig> CONFIG =
