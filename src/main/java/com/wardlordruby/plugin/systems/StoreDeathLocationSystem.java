@@ -2,6 +2,7 @@ package com.wardlordruby.plugin.systems;
 
 import com.wardlordruby.plugin.HomePlugin;
 import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
+import com.wardlordruby.plugin.models.Constants;
 
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -34,13 +35,16 @@ public class StoreDeathLocationSystem extends OnDeathSystem {
         @Nonnull CommandBuffer<EntityStore> buffer
     ) {
         PlayerRef player = store.getComponent(ref, PlayerRef.getComponentType());
+        UUID playerID = player.getUuid();
+        PermissionsModule permModule = PermissionsModule.get();
 
-        if (HomePlugin.getConfig().backOnDeath
-            || PermissionsModule.get().hasPermission(player.getUuid(), "com.wardlordruby.homeplugin.backOnDeath"))
+        if (permModule.hasPermission(playerID, Constants.BACK_PERM)
+            && HomePlugin.getConfig().backConfig.backOnDeath
+            || permModule.hasPermission(playerID, Constants.BACK_ON_DEATH_PERM))
         {
-            UUID worldUUID = player.getWorldUuid();
-            if (worldUUID == null) return;
-            World world = Universe.get().getWorld(worldUUID);
+            UUID worldID = player.getWorldUuid();
+            if (worldID == null) return;
+            World world = Universe.get().getWorld(worldID);
             if (world == null) return;
             Ref<EntityStore> playerRef = player.getReference();
             if (playerRef == null) return;

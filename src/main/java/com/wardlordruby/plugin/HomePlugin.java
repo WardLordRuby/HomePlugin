@@ -53,7 +53,7 @@ public class HomePlugin extends JavaPlugin {
         if (config.enabledModules.home) {
             Objects.requireNonNull(playerHomes, HOME_MODULE_REQUIRED).write(fileManager);
         }
-        fileManager.write(getConfig(), JsonResource.CONFIG);
+        fileManager.write(config, JsonResource.CONFIG);
         super.shutdown();
     }
 

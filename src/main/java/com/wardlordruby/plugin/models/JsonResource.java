@@ -1,5 +1,7 @@
 package com.wardlordruby.plugin.models;
 
+import com.google.gson.reflect.TypeToken;
+
 import java.lang.reflect.Type;
 import java.util.function.Supplier;
 
@@ -23,7 +25,7 @@ public final record JsonResource<T>(
         new JsonResource<>(
             "homes.json",
             "Player homes",
-            HomeMap.class,
+            new TypeToken<HomeMap>() {}.getType(),
             HomeMap::new
         );
 
@@ -31,7 +33,7 @@ public final record JsonResource<T>(
         new JsonResource<>(
             "config.json",
             "Plugin config",
-            PluginConfig.class,
+            new TypeToken<PluginConfig>() {}.getType(),
             PluginConfig::new
         );
 }
