@@ -21,18 +21,38 @@ Copy the built JAR file to your Hytale server's `mods/` directory.
 
 This plugin is split into modules, each of which can be loaded independently. This can be configured from within 'config.json'.  
 
-Added commands:
+### Added commands
 
-| Commands                     | permission                                | Description                                                 |
-| ---------------------------- | ----------------------------------------- | ----------------------------------------------------------- |
-| `/home`                      | com.wardlordruby.homeplugin.command.home  | Teleports player to their set home                          |
-| `/home set`                  | com.wardlordruby.homeplugin.command.home  | Sets the players home to their current position             |
-| [`/back`](#back)             | com.wardlordruby.homeplugin.command.back  | Teleports the player to the last entry in `TeleportHistory` |
+| Commands                     | permission                                  | Description                                                  |
+| ---------------------------- | ------------------------------------------- | ------------------------------------------------------------ |
+| [`/home`](#home)             | `com.wardlordruby.homeplugin.command.home`  | Teleports player to their default home                       |
+| `/home <name>`               | `com.wardlordruby.homeplugin.command.home`  | Teleports player to their specified home                     |
+| `/home set <name>`           | `com.wardlordruby.homeplugin.command.home`  | Sets the players home to their current position              |
+| `/home default <name>`       | `com.wardlordruby.homeplugin.command.home`  | Sets the players specified home as default                   |
+| `/home remove <name>`        | `com.wardlordruby.homeplugin.command.home`  | Removes the players specified home                           |
+| `/home list`                 | `com.wardlordruby.homeplugin.command.home`  | Lists the players set homes, use --verbose for detailed list |
+| [`/back`](#back)             | `com.wardlordruby.homeplugin.command.back`  | Teleports the player to the last entry in `TeleportHistory`  |
+
+## Home
+
+Players with permission to use `/home` can set a number of homes equal to `baseHomeCount` by default. 
+
+To allow players to have more homes, grant them a rank permission in the format:
+`com.wardlordruby.homeplugin.config.homerank.<number>`
+
+The `<number>` corresponds to the position in the `homeCountByRank` list. For example:
+- `homerank.1` grants the number of homes specified in the first value of `homeCountByRank`
+- `homerank.2` grants the number specified in the second value
+- And so on...
+
+You can add additional ranks by extending the `homeCountByRank` list with more values.
 
 ## Back
 
-The ability for players to use back on death can be configured globally via 'config.json' where it is defaulted to true. You can also grant
-this functionality to groups or specific players by assigning them the permission 'com.wardlordruby.homeplugin.backOnDeath'.
+Players can use `/back` after death if the `backOnDeath` setting in `config.json` is set to `true` (which is the default).
+
+To override this on a per-player or per-group basis first set `backOnDeath` to `false` then, grant the permission:
+`com.wardlordruby.homeplugin.config.backOnDeath`
 
 ## License
 
