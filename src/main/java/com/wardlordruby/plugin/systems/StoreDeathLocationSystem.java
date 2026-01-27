@@ -46,10 +46,8 @@ public class StoreDeathLocationSystem extends OnDeathSystem {
             if (worldID == null) return;
             World world = Universe.get().getWorld(worldID);
             if (world == null) return;
-            Ref<EntityStore> playerRef = player.getReference();
-            if (playerRef == null) return;
 
-            world.execute(() -> TeleportHistoryUtil.append(playerRef, playerRef.getStore(), world, player.getTransform()));
+            world.execute(() -> TeleportHistoryUtil.append(ref, store, world, player.getTransform()));
         }
     }
 }
