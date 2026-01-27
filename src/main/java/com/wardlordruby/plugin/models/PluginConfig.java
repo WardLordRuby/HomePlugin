@@ -12,7 +12,7 @@ public final class PluginConfig {
 
     public final class HomeConfig {
         public short baseHomeCount = 1;
-        public int[] homeCountByRank = {2, 4 , 10};
+        public int[] homeCountByRank = {2, 4, 10};
     }
 
     public final class BackConfig {

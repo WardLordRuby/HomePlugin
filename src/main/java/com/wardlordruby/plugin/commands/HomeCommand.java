@@ -114,13 +114,12 @@ public class HomeCommand extends AbstractPlayerCommand {
     ) {
         /// Must be called from within a method that will catch `NullPointerExceptions`
         public static @Nullable ValidateHomeNameString from(
-            CommandContext context,
-            RequiredArg<String> homeNameArg
+            @Nonnull CommandContext context,
+            @Nonnull RequiredArg<String> homeNameArg
         ) {
             UUID senderID = Objects.requireNonNull(context.sender().getUuid());
             PlayerRef playerRef = Objects.requireNonNull(Universe.get().getPlayer(senderID));
 
-            @SuppressWarnings("null")
             String homeName = Objects.requireNonNull(parseHostNameArg(homeNameArg, context));
             String homeNameErr = validateHostName(homeName);
 
@@ -136,7 +135,7 @@ public class HomeCommand extends AbstractPlayerCommand {
     /// Only to be used with `PlayerHomeManager` methods that have a return value of `Success<String>`
     private static CompletableFuture<Void> executeOnPlayerManager(
         @Nonnull CommandContext context,
-        @Nullable RequiredArg<String> homeNameArg,
+        @Nonnull RequiredArg<String> homeNameArg,
         @Nonnull PlayerHomeManager playerHomes,
         @Nonnull BiFunction<String, UUID, PlayerHomeResult> modifyFn
     ) {
@@ -157,7 +156,7 @@ public class HomeCommand extends AbstractPlayerCommand {
     }
 
     private class SpecificHomeCommand extends AbstractAsyncCommand {
-        private final RequiredArg<String> homeNameArg;
+        private final @Nonnull RequiredArg<String> homeNameArg;
 
         @SuppressWarnings("null")
         public SpecificHomeCommand() {
@@ -171,7 +170,7 @@ public class HomeCommand extends AbstractPlayerCommand {
             return executeTeleport(context).exceptionally(HomeCommand::logException);
         }
 
-        private CompletableFuture<Void> executeTeleport(CommandContext context) {
+        private CompletableFuture<Void> executeTeleport(@Nonnull CommandContext context) {
             ValidateHomeNameString meta = ValidateHomeNameString.from(context, homeNameArg);
             if (meta == null) return CompletableFuture.completedFuture(null);
 
@@ -211,7 +210,7 @@ public class HomeCommand extends AbstractPlayerCommand {
     }
 
     private class ListHomesCommand extends AbstractAsyncCommand {
-        private final FlagArg verboseArg;
+        private final @Nonnull FlagArg verboseArg;
 
         public ListHomesCommand() {
             super("list", "List all your saved homes");
@@ -238,7 +237,7 @@ public class HomeCommand extends AbstractPlayerCommand {
     }
 
     private class SetHomeCommand extends AbstractAsyncCommand {
-        private final RequiredArg<String> homeNameArg;
+        private final @Nonnull RequiredArg<String> homeNameArg;
 
         @SuppressWarnings("null")
         public SetHomeCommand() {
@@ -254,7 +253,7 @@ public class HomeCommand extends AbstractPlayerCommand {
             return executeSetHome(context).exceptionally(HomeCommand::logException);
         }
 
-        private CompletableFuture<Void> executeSetHome(CommandContext context) {
+        private CompletableFuture<Void> executeSetHome(@Nonnull CommandContext context) {
             ValidateHomeNameString meta = ValidateHomeNameString.from(context, homeNameArg);
             if (meta == null) return CompletableFuture.completedFuture(null);
 
@@ -269,7 +268,7 @@ public class HomeCommand extends AbstractPlayerCommand {
     }
 
     private class SetDefaultHomeCommand extends AbstractAsyncCommand {
-        private final RequiredArg<String> homeNameArg;
+        private final @Nonnull RequiredArg<String> homeNameArg;
 
         @SuppressWarnings("null")
         public SetDefaultHomeCommand() {
@@ -287,7 +286,7 @@ public class HomeCommand extends AbstractPlayerCommand {
     }
 
     private class RemoveHomeCommand extends AbstractAsyncCommand {
-        private final RequiredArg<String> homeNameArg;
+        private final @Nonnull RequiredArg<String> homeNameArg;
 
         @SuppressWarnings("null")
         public RemoveHomeCommand() {
