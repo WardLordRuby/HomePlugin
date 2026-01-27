@@ -95,7 +95,7 @@ public class HomeCommand extends AbstractPlayerCommand {
             return "Home name can not be empty";
         }
         for (String name : SUBCOMMAND_NAME_OR_ALIAS) {
-            if (hostName.equals(name)) {
+            if (hostName.equalsIgnoreCase(name)) {
                 return "Can not set home name the same as a subcommand";
             }
         }

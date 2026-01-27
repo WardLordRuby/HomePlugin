@@ -130,7 +130,7 @@ public class PlayerHomeManager {
     }
 
     private Optional<TeleportEntry> query(@Nonnull String tag, @Nonnull List<TeleportEntry> playerHomes) {
-        return playerHomes.stream().filter(entry -> entry.tag.equals(tag)).findFirst();
+        return playerHomes.stream().filter(entry -> entry.tag.equalsIgnoreCase(tag)).findFirst();
     }
 
     @SuppressWarnings("null")
@@ -143,7 +143,7 @@ public class PlayerHomeManager {
         if (playerHomes == null || playerHomes.isEmpty()) return new PlayerHomeResult.NoSetHomes();
 
         OptionalInt index = IntStream.range(0, playerHomes.size())
-            .filter(i -> playerHomes.get(i).tag.equals(tag))
+            .filter(i -> playerHomes.get(i).tag.equalsIgnoreCase(tag))
             .findFirst();
 
         return index.isPresent() ? onFound.apply(playerHomes, index.getAsInt()) : new PlayerHomeResult.HomeNotFound(tag);
