@@ -27,9 +27,7 @@ public class TeleportEntry {
 
     @SuppressWarnings("null")
     public @Nonnull String display() {
-        return String.format(
-            "'%s' is located in world '%s' at x: %.0f, y: %.0f, z: %.0f",
-            tag, world, position.x, position.y, position.z
-        );
+        return "'%s' is located in world '%s' at x: %.0f, y: %.0f, z: %.0f"
+            .formatted(tag, world, position.x, position.y, position.z);
     }
 }

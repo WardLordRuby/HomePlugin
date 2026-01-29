@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 
 public sealed interface PlayerHomeResult {
     @Nonnull String display();
+    @Nonnull String displayForOther(@Nonnull String username);
 
     default boolean isSuccess() {
         return this instanceof Success<?>;
@@ -22,6 +23,10 @@ public sealed interface PlayerHomeResult {
             };
         }
 
+        public @Nonnull String displayForOther(@Nonnull String username) {
+            throw new IllegalStateException();
+        }
+
         public @Nonnull T get() {
             return value;
         }
@@ -31,23 +36,43 @@ public sealed interface PlayerHomeResult {
         public @Nonnull String display() {
             return "You can not set your home in temporary worlds";
         }
+
+        public @Nonnull String displayForOther(@Nonnull String username) {
+            throw new IllegalStateException();
+        }
     }
 
     record NoSetHomes() implements PlayerHomeResult {
         public @Nonnull String display() {
             return "You have no homes set!";
         }
+
+        @SuppressWarnings("null")
+        public @Nonnull String displayForOther(@Nonnull String username) {
+            return "%s has no set homes".formatted(username);
+        }
     }
 
     record HomeNotFound(@Nonnull String homeName) implements PlayerHomeResult {
+        @SuppressWarnings("null")
         public @Nonnull String display() {
-            return "No home with name '" + homeName + "' exists";
+            return "No home with name '%s' exists".formatted(homeName);
+        }
+
+        @SuppressWarnings("null")
+        public @Nonnull String displayForOther(@Nonnull String username) {
+            return "No home with name '%s' exists for user: %s".formatted(homeName, username);
         }
     }
 
     record AlreadyDefault(@Nonnull String homeName) implements PlayerHomeResult {
+        @SuppressWarnings("null")
         public @Nonnull String display() {
-            return "Home '" + homeName + "' is already default";
+            return "Home '%s' is already default".formatted(homeName);
+        }
+
+        public @Nonnull String displayForOther(@Nonnull String username) {
+            throw new IllegalStateException();
         }
     }
 
@@ -59,6 +84,10 @@ public sealed interface PlayerHomeResult {
                           + "\nYou will not be able to set or update your homes until you are in compliance";
                 default -> throw new IllegalStateException();
             };
+        }
+
+        public @Nonnull String displayForOther(@Nonnull String username) {
+            throw new IllegalStateException();
         }
     }
 }

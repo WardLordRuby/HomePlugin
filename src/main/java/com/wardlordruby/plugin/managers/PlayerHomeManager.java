@@ -2,7 +2,7 @@ package com.wardlordruby.plugin.managers;
 
 import com.wardlordruby.plugin.services.JsonStorageService;
 import com.wardlordruby.plugin.HomePlugin;
-import com.wardlordruby.plugin.models.Constants;
+import com.wardlordruby.plugin.models.Permissions;
 import com.wardlordruby.plugin.models.HomeMap;
 import com.wardlordruby.plugin.models.JsonResource;
 import com.wardlordruby.plugin.models.PlayerHomeResult;
@@ -65,6 +65,7 @@ public class PlayerHomeManager {
         UUID playerID = playerRef.getUuid();
         int homeLimit = getHomeLimit(playerID);
 
+        HomePlugin.insertUUID(playerRef.getUsername(), playerID);
         List<TeleportEntry> playerHomes = homeMap.computeIfAbsent(
             playerID,
             k -> new ArrayList<>()
@@ -110,14 +111,11 @@ public class PlayerHomeManager {
         List<TeleportEntry> playerHomes = homeMap.get(playerID);
         if (playerHomes == null || playerHomes.isEmpty()) return new PlayerHomeResult.NoSetHomes();
 
-        String homeList = verbose
+        return new PlayerHomeResult.Success<>(verbose
             ? playerHomes.stream().map(TeleportEntry::display).collect(Collectors.joining("\n"))
-            : String.format(
-                "Available homes: [%s]",
+            : "Available homes: [%s]".formatted(
                 playerHomes.stream().map(home -> home.tag).collect(Collectors.joining(", "))
-              );
-
-        return new PlayerHomeResult.Success<>(homeList);
+              ));
     }
 
     @SuppressWarnings("null") // Trust that the supplied function doesn't return null
@@ -152,7 +150,7 @@ public class PlayerHomeManager {
     private static int getHomeLimit(@Nonnull UUID playerID) {
         PermissionsModule permManager = PermissionsModule.get();
 
-        if (permManager.hasPermission(playerID, Constants.HOME_RANK_PERM + ".*")) {
+        if (permManager.hasPermission(playerID, Permissions.HOME_RANK + ".*")) {
             return MAX_HOMES;
         }
 
@@ -160,7 +158,7 @@ public class PlayerHomeManager {
         int[] homeLimits = homeConfig.homeCountByRank;
 
         for (int i = homeLimits.length - 1; i >= 0; i--) {
-            if (permManager.hasPermission(playerID, Constants.HOME_RANK_PERM + "." + (i + 1))) {
+            if (permManager.hasPermission(playerID, Permissions.HOME_RANK + "." + (i + 1))) {
                 return Math.min(homeLimits[i], MAX_HOMES);
             }
         }
