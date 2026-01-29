@@ -2,7 +2,7 @@ package com.wardlordruby.plugin.systems;
 
 import com.wardlordruby.plugin.HomePlugin;
 import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
-import com.wardlordruby.plugin.models.Constants;
+import com.wardlordruby.plugin.models.Permissions;
 
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
@@ -38,9 +38,9 @@ public class StoreDeathLocationSystem extends OnDeathSystem {
         UUID playerID = player.getUuid();
         PermissionsModule permModule = PermissionsModule.get();
 
-        if (permModule.hasPermission(playerID, Constants.BACK_PERM)
+        if (permModule.hasPermission(playerID, Permissions.BACK)
             && HomePlugin.getConfig().backConfig.backOnDeath
-            || permModule.hasPermission(playerID, Constants.BACK_ON_DEATH_PERM))
+            || permModule.hasPermission(playerID, Permissions.BACK_ON_DEATH))
         {
             UUID worldID = player.getWorldUuid();
             if (worldID == null) return;
