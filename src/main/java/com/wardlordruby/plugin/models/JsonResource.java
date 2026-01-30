@@ -29,14 +29,6 @@ public final record JsonResource<T>(
             HomeMap::new
         );
 
-    public static final JsonResource<PlayerCache> PLAYER_CACHE =
-        new JsonResource<>(
-            "playerCache.json",
-            "Player cache",
-            new TypeToken<PlayerCache>() {}.getType(),
-            PlayerCache::new
-        );
-
     public static final JsonResource<PluginConfig> CONFIG =
         new JsonResource<>(
             "config.json",

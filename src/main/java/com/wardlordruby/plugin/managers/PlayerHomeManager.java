@@ -66,7 +66,6 @@ public class PlayerHomeManager {
         UUID playerID = playerRef.getUuid();
         int homeLimit = getHomeLimit(playerID);
 
-        HomePlugin.insertUUID(playerRef.getUsername(), playerID);
         List<TeleportEntry> playerHomes = homeMap.computeIfAbsent(
             playerID,
             k -> new ArrayList<>()
@@ -114,9 +113,7 @@ public class PlayerHomeManager {
 
         return new PlayerHomeResult.Success<>(verbose
             ? playerHomes.stream().map(TeleportEntry::display).collect(Collectors.joining("\n"))
-            : "Available homes: [%s]".formatted(
-                playerHomes.stream().map(home -> home.tag).collect(Collectors.joining(", "))
-              ));
+            : playerHomes.stream().map(home -> home.tag).collect(Collectors.joining(", ")));
     }
 
     @SuppressWarnings("null") // Trust that the supplied function doesn't return null

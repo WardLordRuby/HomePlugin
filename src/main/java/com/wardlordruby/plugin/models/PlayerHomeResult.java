@@ -1,10 +1,16 @@
 package com.wardlordruby.plugin.models;
 
+import java.util.Set;
+import java.util.UUID;
+
 import javax.annotation.Nonnull;
+
+import com.hypixel.hytale.server.core.universe.Universe;
+import com.wardlordruby.plugin.HomePlugin;
 
 public sealed interface PlayerHomeResult {
     @Nonnull String display();
-    @Nonnull String displayForOther(@Nonnull String username);
+    @Nonnull String displayForOther(@Nonnull PlayerMetaData player);
 
     default boolean isSuccess() {
         return this instanceof Success<?>;
@@ -12,6 +18,18 @@ public sealed interface PlayerHomeResult {
 
     default boolean isError() {
         return !isSuccess();
+    }
+
+    @SuppressWarnings("null")
+    default @Nonnull String listFmt(boolean verbose) {
+        return verbose ? "Homes:\n%s".formatted(this.display()) : "Available homes: [%s]".formatted(this.display());
+    }
+
+    @SuppressWarnings("null")
+    default @Nonnull String listFmtOther(@Nonnull PlayerMetaData player, boolean verbose) {
+        return verbose
+            ? "%s's homes:\n%s".formatted(player.getUsername(), this.display())
+            : "%s's set homes: [%s]".formatted(player.getUsername(), this.display());
     }
 
     record Success<T>(@Nonnull T value) implements PlayerHomeResult {
@@ -23,7 +41,7 @@ public sealed interface PlayerHomeResult {
             };
         }
 
-        public @Nonnull String displayForOther(@Nonnull String username) {
+        public @Nonnull String displayForOther(@Nonnull PlayerMetaData player) {
             throw new IllegalStateException();
         }
 
@@ -37,7 +55,7 @@ public sealed interface PlayerHomeResult {
             return "You can not set your home in temporary worlds";
         }
 
-        public @Nonnull String displayForOther(@Nonnull String username) {
+        public @Nonnull String displayForOther(@Nonnull PlayerMetaData player) {
             throw new IllegalStateException();
         }
     }
@@ -48,8 +66,18 @@ public sealed interface PlayerHomeResult {
         }
 
         @SuppressWarnings("null")
-        public @Nonnull String displayForOther(@Nonnull String username) {
-            return "%s has no set homes".formatted(username);
+        public @Nonnull String displayForOther(@Nonnull PlayerMetaData player) {
+            try {
+                Set<UUID> seenPlayers = Universe.get().getPlayerStorage().getPlayers();
+                UUID playerID = player.getUuid();
+                if (!seenPlayers.contains(playerID)) {
+                    return "'%s' (%s) has never previously connected".formatted(player.getUsername(), playerID);
+                }
+            } catch (Exception e) {
+                HomePlugin.LOGGER.atSevere().log(e.getLocalizedMessage());
+            }
+
+            return "%s has no set homes".formatted(player.getUsername());
         }
     }
 
@@ -60,8 +88,8 @@ public sealed interface PlayerHomeResult {
         }
 
         @SuppressWarnings("null")
-        public @Nonnull String displayForOther(@Nonnull String username) {
-            return "No home with name '%s' exists for user: %s".formatted(homeName, username);
+        public @Nonnull String displayForOther(@Nonnull PlayerMetaData player) {
+            return "No home with name '%s' exists for user: %s".formatted(homeName, player.getUsername());
         }
     }
 
@@ -71,7 +99,7 @@ public sealed interface PlayerHomeResult {
             return "Home '%s' is already default".formatted(homeName);
         }
 
-        public @Nonnull String displayForOther(@Nonnull String username) {
+        public @Nonnull String displayForOther(@Nonnull PlayerMetaData player) {
             throw new IllegalStateException();
         }
     }
@@ -86,7 +114,7 @@ public sealed interface PlayerHomeResult {
             };
         }
 
-        public @Nonnull String displayForOther(@Nonnull String username) {
+        public @Nonnull String displayForOther(@Nonnull PlayerMetaData player) {
             throw new IllegalStateException();
         }
     }

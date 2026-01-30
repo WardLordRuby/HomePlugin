@@ -6,7 +6,6 @@ import com.wardlordruby.plugin.services.JsonStorageService;
 import com.wardlordruby.plugin.managers.PlayerHomeManager;
 import com.wardlordruby.plugin.models.PluginConfig;
 import com.wardlordruby.plugin.models.JsonResource;
-import com.wardlordruby.plugin.models.PlayerCache;
 import com.wardlordruby.plugin.systems.StoreDeathLocationSystem;
 
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -14,19 +13,16 @@ import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 
 import java.util.Objects;
-import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class HomePlugin extends JavaPlugin {
-    public static final String NAME = HomePlugin.class.getSimpleName();
     public static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     public static final String HOME_MODULE_REQUIRED = "`PlayerHomeManager` is only used when module enabled";
 
     @SuppressWarnings("null") // Read will either throw or return a Nonnull
     private static @Nonnull PluginConfig config;
-    private static @Nullable PlayerCache playerCache;
 
     private final @Nonnull JsonStorageService fileManager;
     private final @Nullable PlayerHomeManager playerHomes;
@@ -35,7 +31,6 @@ public class HomePlugin extends JavaPlugin {
         super(init);
         this.fileManager = new JsonStorageService(getDataDirectory());
         config = fileManager.read(JsonResource.CONFIG);
-        playerCache = config.enabledModules.offlinePlayerCache ? fileManager.read(JsonResource.PLAYER_CACHE) : null;
         this.playerHomes = config.enabledModules.home ? new PlayerHomeManager(fileManager.read(JsonResource.HOMES)) : null;
     }
 
@@ -55,20 +50,11 @@ public class HomePlugin extends JavaPlugin {
     @Override
     protected void shutdown() {
         if (playerHomes != null) playerHomes.write(fileManager);
-        if (playerCache != null) fileManager.write(playerCache, JsonResource.PLAYER_CACHE);
         fileManager.write(config, JsonResource.CONFIG);
         super.shutdown();
     }
 
     public static @Nonnull PluginConfig getConfig() {
         return config;
-    }
-
-    public static @Nullable UUID getCachedUUID(@Nonnull String username) {
-        return playerCache != null ? playerCache.get(username) : null;
-    }
-
-    public static @Nullable UUID insertUUID(@Nonnull String username, @Nonnull UUID playerID) {
-        return playerCache != null ? playerCache.put(username, playerID) : null;
     }
 }

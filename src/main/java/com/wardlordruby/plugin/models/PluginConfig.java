@@ -6,7 +6,6 @@ public final class PluginConfig {
     public BackConfig backConfig = new BackConfig();
 
     public final class Modules {
-        public boolean offlinePlayerCache = true;
         public boolean home = true;
         public boolean back = true;
     }

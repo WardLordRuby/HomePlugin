@@ -54,12 +54,6 @@ You can add additional ranks by extending the `homeCountByRank` list with more v
 Home has two admin commands: `/home <player> <name>` and `/home list <player>`. These can be completely disabled by setting
 `adminCommands` to `false` in the config. 
 
-For admins to be able to search offline players a cache (playerCache.json) containing <Username,UUID> was added. This can be
-op-out by setting `offlinePlayerCache` to `false` in the config. This will make it so you are only able to select players that
-are currently online.
-
-This is needed since you are unable to get the correct UUID for players that are not currently connected to the server.
-
 ## Back
 
 Players can use `/back` after death if the `backOnDeath` setting in `config.json` is set to `true` (which is the default).
