@@ -192,7 +192,7 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         world.execute(() -> {
             Store<EntityStore> store = ref.getStore();
-            TeleportHistoryUtil.append(ref, store, world, senderRef.getTransform());
+            TeleportHistoryUtil.append(ref, store, world, senderRef.getTransform(), targetWorld.getName(), playerHome.position);
             Teleport playerTeleport = Teleport.createForPlayer(targetWorld, playerHome.position, playerHome.rotation);
             store.addComponent(ref, Teleport.getComponentType(), playerTeleport);
         });

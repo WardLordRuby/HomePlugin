@@ -61,6 +61,11 @@ Players can use `/back` after death if the `backOnDeath` setting in `config.json
 To override this on a per-player or per-group basis first set `backOnDeath` to `false` then, grant the permission:
 `com.wardlordruby.homeplugin.config.backOnDeath`
 
+## Teleport config
+
+Within the config you will find `tpHistoryMinDistance`. This value specifies how far away the player has to be (in blocks) for
+a teleport to be appended to the `TeleportHistory`.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

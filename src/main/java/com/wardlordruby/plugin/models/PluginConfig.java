@@ -4,6 +4,7 @@ public final class PluginConfig {
     public Modules enabledModules = new Modules();
     public HomeConfig homeConfig = new HomeConfig();
     public BackConfig backConfig = new BackConfig();
+    public TeleportConfig teleportConfig = new TeleportConfig();
 
     public final class Modules {
         public boolean home = true;
@@ -18,5 +19,9 @@ public final class PluginConfig {
 
     public final class BackConfig {
         public boolean backOnDeath = true;
+    }
+
+    public final class TeleportConfig {
+        public double tpHistoryMinDistance = 20;
     }
 }

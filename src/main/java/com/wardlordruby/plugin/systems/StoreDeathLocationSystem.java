@@ -3,6 +3,7 @@ package com.wardlordruby.plugin.systems;
 import com.wardlordruby.plugin.HomePlugin;
 import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
 import com.wardlordruby.plugin.models.Permissions;
+
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -46,7 +47,7 @@ public class StoreDeathLocationSystem extends OnDeathSystem {
             World world = Universe.get().getWorld(worldID);
             if (world == null) return;
 
-            world.execute(() -> TeleportHistoryUtil.append(ref, buffer, world, player.getTransform()));
+            world.execute(() -> TeleportHistoryUtil.append(ref, buffer, world, player.getTransform(), null, null));
         }
     }
 }
