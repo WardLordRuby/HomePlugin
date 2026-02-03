@@ -1,12 +1,13 @@
 package com.wardlordruby.plugin.models;
 
+import com.wardlordruby.plugin.HomePlugin;
+
+import com.hypixel.hytale.server.core.universe.Universe;
+
 import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
-
-import com.hypixel.hytale.server.core.universe.Universe;
-import com.wardlordruby.plugin.HomePlugin;
 
 public sealed interface PlayerHomeResult {
     @Nonnull String display();
@@ -105,11 +106,14 @@ public sealed interface PlayerHomeResult {
     }
 
     record MaxHomesReached(int curr, int max) implements PlayerHomeResult {
+        @SuppressWarnings("null")
         public @Nonnull String display() {
             return switch (Integer.compare(curr, max)) {
-                case 0 -> "You've reached the maximum number of homes (" + max + ")";
-                case 1 -> "You've exceeded the maximum number of homes by " + (curr - max)
-                          + "\nYou will not be able to set or update your homes until you are in compliance";
+                case 0 -> "You've reached the maximum number of homes (%s)".formatted(max);
+                case 1 -> """
+                    You've exceeded the maximum number of homes by (%s)
+                    You will not be able to set or update your homes until you are in compliance\
+                    """.formatted(curr - max);
                 default -> throw new IllegalStateException();
             };
         }

@@ -1,8 +1,8 @@
 package com.wardlordruby.plugin.systems;
 
 import com.wardlordruby.plugin.HomePlugin;
-import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
 import com.wardlordruby.plugin.models.Permissions;
+import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
 
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;

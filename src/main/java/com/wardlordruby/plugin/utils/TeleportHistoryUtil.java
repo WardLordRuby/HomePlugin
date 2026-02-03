@@ -6,12 +6,12 @@ import com.hypixel.hytale.builtin.teleport.components.TeleportHistory;
 import com.hypixel.hytale.component.ComponentAccessor;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.vector.Transform;
+import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.math.vector.Vector3d;
 
-import java.util.Deque;
 import java.lang.reflect.Field;
+import java.util.Deque;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -86,7 +86,7 @@ public final class TeleportHistoryUtil {
     }
 
     @SuppressWarnings("unchecked")
-    private static @Nullable <T> T getDataByField(TeleportHistory.Waypoint waypoint, String fieldName) {
+    private static @Nullable <T> T getDataByField(@Nonnull TeleportHistory.Waypoint waypoint, @Nonnull String fieldName) {
         try {
             Field field  = TeleportHistory.Waypoint.class.getDeclaredField(fieldName);
             field.setAccessible(true);

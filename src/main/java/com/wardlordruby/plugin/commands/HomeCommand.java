@@ -1,11 +1,11 @@
 package com.wardlordruby.plugin.commands;
 
-import com.wardlordruby.plugin.models.PlayerHomeResult;
-import com.wardlordruby.plugin.models.TeleportEntry;
-import com.wardlordruby.plugin.models.Permissions;
-import com.wardlordruby.plugin.models.PlayerMetaData;
 import com.wardlordruby.plugin.HomePlugin;
 import com.wardlordruby.plugin.managers.PlayerHomeManager;
+import com.wardlordruby.plugin.models.Permissions;
+import com.wardlordruby.plugin.models.PlayerHomeResult;
+import com.wardlordruby.plugin.models.PlayerMetaData;
+import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
 
 import com.hypixel.hytale.component.Ref;
@@ -24,13 +24,13 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
+import java.awt.Color;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.awt.Color;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -51,7 +51,6 @@ public class HomeCommand extends AbstractAsyncCommand {
     private static final @Nonnull SingleArgumentType<String> TYPE_STRING = ArgTypes.STRING;
     @SuppressWarnings("null")
     private static final @Nonnull SingleArgumentType<PublicGameProfile> TYPE_PUB_PROFILE = ArgTypes.GAME_PROFILE_LOOKUP;
-
 
     public HomeCommand(@Nonnull PlayerHomeManager homeManager) {
         super("home", "Teleport back to your home");
@@ -274,10 +273,13 @@ public class HomeCommand extends AbstractAsyncCommand {
                 context,
                 () -> PlayerMetaData.fromProfileArg(context, playerProfileArg),
                 playerID -> playerHomeResultFromArg(context, homeNameArg, playerID),
-                (playerHomeRes, playerData) -> playerHomeRes.displayForOther(playerData) +
-                    (playerHomeRes instanceof PlayerHomeResult.HomeNotFound
-                        ? "\n" + playerHomes.list(playerData.getUuid(), false).display()
-                        : "")
+                (playerHomeRes, playerData) -> {
+                    StringBuilder errMsg = new StringBuilder().append(playerHomeRes.displayForOther(playerData));
+                    if (playerHomeRes instanceof PlayerHomeResult.HomeNotFound) {
+                        errMsg.append('\n').append(playerHomes.list(playerData.getUuid(), false));
+                    }
+                    return errMsg.toString();
+                }
             ).exceptionally(HomeCommand::logException);
         }
     }

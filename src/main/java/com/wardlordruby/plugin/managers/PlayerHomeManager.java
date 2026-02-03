@@ -1,13 +1,13 @@
 package com.wardlordruby.plugin.managers;
 
-import com.wardlordruby.plugin.services.JsonStorageService;
 import com.wardlordruby.plugin.HomePlugin;
-import com.wardlordruby.plugin.models.Permissions;
 import com.wardlordruby.plugin.models.HomeMap;
 import com.wardlordruby.plugin.models.JsonResource;
+import com.wardlordruby.plugin.models.Permissions;
 import com.wardlordruby.plugin.models.PlayerHomeResult;
-import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.models.PluginConfig.HomeConfig;
+import com.wardlordruby.plugin.models.TeleportEntry;
+import com.wardlordruby.plugin.services.JsonStorageService;
 
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -113,7 +113,8 @@ public class PlayerHomeManager {
 
         return new PlayerHomeResult.Success<>(verbose
             ? playerHomes.stream().map(TeleportEntry::display).collect(Collectors.joining("\n"))
-            : playerHomes.stream().map(home -> home.tag).collect(Collectors.joining(", ")));
+            : playerHomes.stream().map(home -> home.tag).collect(Collectors.joining(", "))
+        );
     }
 
     @SuppressWarnings("null") // Trust that the supplied function doesn't return null
