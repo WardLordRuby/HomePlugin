@@ -5,6 +5,7 @@ import com.wardlordruby.plugin.models.Permissions;
 import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
 
 import com.hypixel.hytale.component.CommandBuffer;
+import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
@@ -22,9 +23,16 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class StoreDeathLocationSystem extends OnDeathSystem {
+    private final @Nonnull ComponentType<EntityStore, PlayerRef> playerRefComponentType = PlayerRef.getComponentType();
+    private final @Nonnull Query<EntityStore> query;
+
+    public StoreDeathLocationSystem() {
+        this.query = playerRefComponentType;
+    }
+
     @Override
     public @Nullable Query<EntityStore> getQuery() {
-        return PlayerRef.getComponentType();
+        return this.query;
     }
 
     @Override
@@ -34,7 +42,7 @@ public class StoreDeathLocationSystem extends OnDeathSystem {
         @Nonnull Store<EntityStore> store,
         @Nonnull CommandBuffer<EntityStore> buffer
     ) {
-        PlayerRef player = store.getComponent(ref, PlayerRef.getComponentType());
+        PlayerRef player = store.getComponent(ref, playerRefComponentType);
         UUID playerID = player.getUuid();
         PermissionsModule permModule = PermissionsModule.get();
 
@@ -47,7 +55,7 @@ public class StoreDeathLocationSystem extends OnDeathSystem {
             World world = Universe.get().getWorld(worldID);
             if (world == null) return;
 
-            world.execute(() -> TeleportHistoryUtil.append(ref, buffer, world, player.getTransform(), null, null));
+            world.execute(() -> TeleportHistoryUtil.append(ref, buffer, world, player.getTransform()));
         }
     }
 }

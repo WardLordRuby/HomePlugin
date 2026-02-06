@@ -21,6 +21,15 @@ public final class TeleportHistoryUtil {
         @Nonnull Ref<EntityStore> ref,
         @Nonnull ComponentAccessor<EntityStore> storeAccessor,
         @Nonnull World world,
+        @Nonnull Transform transform
+    ) {
+        append(ref, storeAccessor, world, transform, null, null);
+    }
+
+    public static void append(
+        @Nonnull Ref<EntityStore> ref,
+        @Nonnull ComponentAccessor<EntityStore> storeAccessor,
+        @Nonnull World world,
         @Nonnull Transform transform,
         @Nullable String nextWorld,
         @Nullable Vector3d nextPosition
