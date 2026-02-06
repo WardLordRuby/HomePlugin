@@ -23,7 +23,7 @@ public sealed interface PlayerHomeResult {
 
     @SuppressWarnings("null")
     default @Nonnull String listFmt(boolean verbose) {
-        return verbose ? "Homes:\n%s".formatted(this.display()) : "Available homes: [%s]".formatted(this.display());
+        return verbose ? "Available homes:\n%s".formatted(this.display()) : "Available homes: [%s]".formatted(this.display());
     }
 
     @SuppressWarnings("null")

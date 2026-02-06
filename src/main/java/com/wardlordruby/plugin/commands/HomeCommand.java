@@ -42,7 +42,8 @@ public class HomeCommand extends AbstractAsyncCommand {
     private static final @Nonnull String[] SUBCOMMAND_NAME_OR_ALIAS = {"list", "set", "add", "default", "remove", "delete"};
 
     @SuppressWarnings("null")
-    private static final @Nonnull Message PLAYER_ONLY_COMMAND = Message.raw("Wrong sender type, expecting Player").color(Color.RED);
+    private static final @Nonnull Message PLAYER_ONLY_COMMAND = HomePlugin.formatPlayerMessage("Wrong sender type, expecting Player")
+        .color(Color.RED);
     private static final @Nonnull String SET_HOME_HELP_MSG = "Use `/home set <NAME>` to update your home location";
 
     @SuppressWarnings("null")
@@ -114,7 +115,7 @@ public class HomeCommand extends AbstractAsyncCommand {
         String homeNameErr = validateHomeName(homeName);
 
         if (homeNameErr != null) {
-            context.sendMessage(Message.raw(homeNameErr));
+            context.sendMessage(HomePlugin.formatPlayerMessage(homeNameErr));
             return null;
         }
 
@@ -172,7 +173,7 @@ public class HomeCommand extends AbstractAsyncCommand {
         if (playerHomeRes.isError()) {
             @SuppressWarnings("null")
             @Nonnull String formattedErr = formatErrFn.apply(playerHomeRes, targetPlayer);
-            context.sendMessage(Message.raw(formattedErr));
+            context.sendMessage(HomePlugin.formatPlayerMessage(formattedErr));
             return COMPLETED_FUTURE;
         }
 
@@ -218,10 +219,10 @@ public class HomeCommand extends AbstractAsyncCommand {
         UUID playerID = Objects.requireNonNull(context.sender().getUuid());
 
         PlayerHomeResult result = modifyFn.apply(homeName, playerID);
-        context.sendMessage(Message.raw(result.display()));
+        context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
 
         if (result.isError()) {
-            context.sendMessage(Message.raw(result instanceof PlayerHomeResult.NoSetHomes
+            context.sendMessage(HomePlugin.formatPlayerMessage(result instanceof PlayerHomeResult.NoSetHomes
                 ? SET_HOME_HELP_MSG
                 : playerHomes.list(playerID, false).display()));
         }
@@ -312,7 +313,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             boolean verbose = verboseArg.get(context);
 
             PlayerHomeResult result = playerHomes.list(senderID, verbose);
-            context.sendMessage(Message.raw(result.isSuccess() ? result.listFmt(verbose) : result.display()));
+            context.sendMessage(HomePlugin.formatPlayerMessage(result.isSuccess() ? result.listFmt(verbose) : result.display()));
 
             return COMPLETED_FUTURE;
         }
@@ -341,7 +342,7 @@ public class HomeCommand extends AbstractAsyncCommand {
 
             PlayerHomeResult result = playerHomes.list(playerData.getUuid(), verbose);
 
-            context.sendMessage(Message.raw(result.isSuccess()
+            context.sendMessage(HomePlugin.formatPlayerMessage(result.isSuccess()
                 ? result.listFmtOther(playerData, verbose)
                 : result.displayForOther(playerData)));
 
@@ -381,7 +382,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             World world = Objects.requireNonNull(Universe.get().getWorld(worldID));
 
             PlayerHomeResult result = playerHomes.insert(homeName, world, playerRef);
-            context.sendMessage(Message.raw(result.display()));
+            context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
 
             return COMPLETED_FUTURE;
         }
