@@ -8,6 +8,7 @@ import com.wardlordruby.plugin.models.PlayerMetaData;
 import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
 
+import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -18,8 +19,8 @@ import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredAr
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.arguments.types.SingleArgumentType;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractAsyncCommand;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -52,6 +53,9 @@ public class HomeCommand extends AbstractAsyncCommand {
     private static final @Nonnull SingleArgumentType<String> TYPE_STRING = ArgTypes.STRING;
     @SuppressWarnings("null")
     private static final @Nonnull SingleArgumentType<PublicGameProfile> TYPE_PUB_PROFILE = ArgTypes.GAME_PROFILE_LOOKUP;
+
+    private final @Nonnull ComponentType<EntityStore, Teleport> teleportComponentType = Teleport.getComponentType();
+    private final @Nonnull ComponentType<EntityStore, TransformComponent> transformComponentType = TransformComponent.getComponentType();
 
     public HomeCommand(@Nonnull PlayerHomeManager homeManager) {
         super("home", "Teleport back to your home");
@@ -161,8 +165,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             return COMPLETED_FUTURE;
         }
 
-        UUID senderID = Objects.requireNonNull(context.sender().getUuid());
-        PlayerRef senderRef = Objects.requireNonNull(Universe.get().getPlayer(senderID));
+        Ref<EntityStore> ref = Objects.requireNonNull(context.senderAsPlayerRef());
 
         PlayerMetaData targetPlayer = targetPlayerDataFn.get();
         if (targetPlayer == null) return COMPLETED_FUTURE;
@@ -178,23 +181,22 @@ public class HomeCommand extends AbstractAsyncCommand {
         }
 
         TeleportEntry playerHome = (TeleportEntry)((PlayerHomeResult.Success<?>)playerHomeRes).get();
-        World targetWorld = Universe.get().getWorld(playerHome.world);
+
+        Store<EntityStore> store = ref.getStore();
+        World world = store.getExternalData().getWorld();
+
+        World targetWorld = world.getName().equals(playerHome.world) ? world : Universe.get().getWorld(playerHome.world);
 
         if (targetWorld == null) {
             context.sendMessage(Message.translation(WORLD_NOT_LOADED));
             return COMPLETED_FUTURE;
         }
 
-        UUID worldID = Objects.requireNonNull(senderRef.getWorldUuid());
-        World world = Objects.requireNonNull(Universe.get().getWorld(worldID));
-
-        Ref<EntityStore> ref = Objects.requireNonNull(senderRef.getReference());
-
         world.execute(() -> {
-            Store<EntityStore> store = ref.getStore();
-            TeleportHistoryUtil.append(ref, store, world, senderRef.getTransform(), targetWorld.getName(), playerHome.position);
+            TransformComponent senderTransform = Objects.requireNonNull(store.getComponent(ref, transformComponentType));
+            TeleportHistoryUtil.append(ref, store, world, senderTransform.getTransform(), targetWorld.getName(), playerHome.position);
             Teleport playerTeleport = Teleport.createForPlayer(targetWorld, playerHome.position, playerHome.rotation);
-            store.addComponent(ref, Teleport.getComponentType(), playerTeleport);
+            store.addComponent(ref, teleportComponentType, playerTeleport);
         });
 
         return COMPLETED_FUTURE;
@@ -217,14 +219,17 @@ public class HomeCommand extends AbstractAsyncCommand {
         if (homeName == null) return COMPLETED_FUTURE;
 
         UUID playerID = Objects.requireNonNull(context.sender().getUuid());
-
         PlayerHomeResult result = modifyFn.apply(homeName, playerID);
-        context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
 
         if (result.isError()) {
-            context.sendMessage(HomePlugin.formatPlayerMessage(result instanceof PlayerHomeResult.NoSetHomes
+            @SuppressWarnings("null")
+            @Nonnull String errMsg = "%s\n%s".formatted(result.display(), result instanceof PlayerHomeResult.NoSetHomes
                 ? SET_HOME_HELP_MSG
-                : playerHomes.list(playerID, false).display()));
+                : playerHomes.list(playerID, false).display());
+
+            context.sendMessage(HomePlugin.formatPlayerMessage(errMsg));
+        } else {
+            context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
         }
 
         return COMPLETED_FUTURE;
@@ -275,9 +280,9 @@ public class HomeCommand extends AbstractAsyncCommand {
                 () -> PlayerMetaData.fromProfileArg(context, playerProfileArg),
                 playerID -> playerHomeResultFromArg(context, homeNameArg, playerID),
                 (playerHomeRes, playerData) -> {
-                    StringBuilder errMsg = new StringBuilder().append(playerHomeRes.displayForOther(playerData));
+                    StringBuilder errMsg = new StringBuilder().append(playerHomeRes.display(playerData));
                     if (playerHomeRes instanceof PlayerHomeResult.HomeNotFound) {
-                        errMsg.append('\n').append(playerHomes.list(playerData.getUuid(), false));
+                        errMsg.append('\n').append(playerHomes.list(playerData.getUuid(), false).display(playerData));
                     }
                     return errMsg.toString();
                 }
@@ -313,7 +318,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             boolean verbose = verboseArg.get(context);
 
             PlayerHomeResult result = playerHomes.list(senderID, verbose);
-            context.sendMessage(HomePlugin.formatPlayerMessage(result.isSuccess() ? result.listFmt(verbose) : result.display()));
+            context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
 
             return COMPLETED_FUTURE;
         }
@@ -341,10 +346,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             PlayerMetaData playerData = PlayerMetaData.fromProfileArg(context, playerNameArg);
 
             PlayerHomeResult result = playerHomes.list(playerData.getUuid(), verbose);
-
-            context.sendMessage(HomePlugin.formatPlayerMessage(result.isSuccess()
-                ? result.listFmtOther(playerData, verbose)
-                : result.displayForOther(playerData)));
+            context.sendMessage(HomePlugin.formatPlayerMessage(result.display(playerData)));
 
             return COMPLETED_FUTURE;
         }
@@ -375,14 +377,17 @@ public class HomeCommand extends AbstractAsyncCommand {
             String homeName = getValidatedHomeName(context, homeNameArg);
             if (homeName == null) return COMPLETED_FUTURE;
 
+            Ref<EntityStore> ref = Objects.requireNonNull(context.senderAsPlayerRef());
             UUID playerID = Objects.requireNonNull(context.sender().getUuid());
-            PlayerRef playerRef = Objects.requireNonNull(Universe.get().getPlayer(playerID));
 
-            UUID worldID = Objects.requireNonNull(playerRef.getWorldUuid());
-            World world = Objects.requireNonNull(Universe.get().getWorld(worldID));
+            Store<EntityStore> store = ref.getStore();
+            World world = store.getExternalData().getWorld();
 
-            PlayerHomeResult result = playerHomes.insert(homeName, world, playerRef);
-            context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
+            world.execute(() -> {
+                TransformComponent playerTransform = Objects.requireNonNull(store.getComponent(ref, transformComponentType));
+                PlayerHomeResult result = playerHomes.insert(homeName, world.getName(), playerID, playerTransform.getTransform());
+                context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
+            });
 
             return COMPLETED_FUTURE;
         }

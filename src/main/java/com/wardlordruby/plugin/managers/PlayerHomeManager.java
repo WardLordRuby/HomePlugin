@@ -9,9 +9,8 @@ import com.wardlordruby.plugin.models.PluginConfig.HomeConfig;
 import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.services.JsonStorageService;
 
+import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.world.World;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,14 +55,16 @@ public class PlayerHomeManager {
     }
 
     /// Success value is guaranteed to contain a `String` (success message)
-    public @Nonnull PlayerHomeResult insert(@Nonnull String tag, @Nonnull World world, @Nonnull PlayerRef playerRef) {
-        String worldName = world.getName();
-
+    public @Nonnull PlayerHomeResult insert(
+        @Nonnull String tag,
+        @Nonnull String worldName,
+        @Nonnull UUID playerID,
+        @Nonnull Transform playerTransform
+    ) {
         if (worldName.startsWith(TMP_WORLD_INDICATOR)) {
             return new PlayerHomeResult.IllegalWorld();
         }
 
-        UUID playerID = playerRef.getUuid();
         int homeLimit = getHomeLimit(playerID);
 
         List<TeleportEntry> playerHomes = homeMap.computeIfAbsent(
@@ -77,8 +78,8 @@ public class PlayerHomeManager {
 
         Optional<TeleportEntry> matchingHome = query(tag, playerHomes);
         matchingHome.ifPresentOrElse(
-            playerHome -> playerHome.update(worldName, playerRef.getTransform()),
-            () -> playerHomes.add(new TeleportEntry(tag, worldName, playerRef.getTransform()))
+            playerHome -> playerHome.update(worldName, playerTransform),
+            () -> playerHomes.add(new TeleportEntry(tag, worldName, playerTransform))
         );
 
         return new PlayerHomeResult.Success<>(
@@ -111,10 +112,11 @@ public class PlayerHomeManager {
         List<TeleportEntry> playerHomes = homeMap.get(playerID);
         if (playerHomes == null || playerHomes.isEmpty()) return new PlayerHomeResult.NoSetHomes();
 
-        return new PlayerHomeResult.Success<>(verbose
+        String list = verbose
             ? playerHomes.stream().map(TeleportEntry::display).collect(Collectors.joining("\n"))
-            : playerHomes.stream().map(home -> home.tag).collect(Collectors.joining(", "))
-        );
+            : playerHomes.stream().map(home -> home.tag).collect(Collectors.joining(", "));
+
+        return new PlayerHomeResult.Success<>(new PlayerHomeResult.List(list, verbose));
     }
 
     @SuppressWarnings("null") // Trust that the supplied function doesn't return null
