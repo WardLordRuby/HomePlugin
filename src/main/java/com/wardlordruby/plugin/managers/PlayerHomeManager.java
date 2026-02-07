@@ -62,7 +62,13 @@ public class PlayerHomeManager {
         @Nonnull Transform playerTransform
     ) {
         if (worldName.startsWith(TMP_WORLD_INDICATOR)) {
-            return new PlayerHomeResult.IllegalWorld();
+            return PlayerHomeResult.IllegalWorld.temporary();
+        }
+
+        String[] bannedWorlds = HomePlugin.getConfig().homeConfig.bannedHomeWorlds;
+
+        for (String banned : bannedWorlds) {
+            if (banned.equals(worldName)) return PlayerHomeResult.IllegalWorld.banned(banned);
         }
 
         int homeLimit = getHomeLimit(playerID);

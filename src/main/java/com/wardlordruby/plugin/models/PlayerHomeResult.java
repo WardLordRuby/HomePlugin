@@ -50,14 +50,26 @@ public sealed interface PlayerHomeResult {
 
     record List(@Nonnull String list, boolean verbose) {}
 
-    record IllegalWorld() implements PlayerHomeResult {
+    record IllegalWorld(@Nullable String world) implements PlayerHomeResult {
+        public static @Nonnull IllegalWorld temporary() {
+            return new IllegalWorld(null);
+        }
+
+        public static @Nonnull IllegalWorld banned(@Nonnull String world) {
+            return new IllegalWorld(world);
+        }
+
         public @Nonnull String display() {
             return display(null);
         }
 
+        @SuppressWarnings("null")
         public @Nonnull String display(@Nullable PlayerMetaData player) {
             if (player != null) throw new IllegalStateException();
-            return "You can not set your home in temporary worlds";
+
+            return world == null
+                ? "You can not set your home in temporary worlds"
+                : "You can not set your home in the banned world '%s'".formatted(world);
         }
     }
 

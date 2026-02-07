@@ -15,6 +15,7 @@ public final class PluginConfig {
         public boolean adminCommands = true;
         public short baseHomeCount = 1;
         public int[] homeCountByRank = {2, 4, 10};
+        public String[] bannedHomeWorlds = {};
     }
 
     public final class BackConfig {
