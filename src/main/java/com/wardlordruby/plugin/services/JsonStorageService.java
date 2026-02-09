@@ -2,6 +2,8 @@ package com.wardlordruby.plugin.services;
 
 import com.wardlordruby.plugin.HomePlugin;
 import com.wardlordruby.plugin.models.JsonResource;
+import com.wardlordruby.plugin.models.TeleportEntry;
+import com.wardlordruby.plugin.models.TeleportEntryAdapter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -15,7 +17,11 @@ import java.nio.file.Path;
 import javax.annotation.Nonnull;
 
 public class JsonStorageService {
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson gson = new GsonBuilder()
+        .setPrettyPrinting()
+        .registerTypeAdapter(TeleportEntry.class, new TeleportEntryAdapter())
+        .create();
+
     private final File baseDirectory;
 
     public JsonStorageService(@Nonnull Path baseDirectory) {
@@ -46,15 +52,26 @@ public class JsonStorageService {
 
         if (!file.exists()) return resource.createDefault();
 
+        T data = null;
+
         try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
-            T data = gson.fromJson(reader, resource.type());
-            if (data == null) return resource.createDefault(); else {
-                HomePlugin.LOGGER.atInfo().log("%s loaded", resource.displayName());
-                return data;
-            }
+            data = gson.fromJson(reader, resource.type());
         } catch (Exception e) {
             HomePlugin.LOGGER.atSevere().log("Failed to read: %s\n%s", file.getAbsolutePath(), e.getMessage());
             throw new IllegalStateException("Cannot read data file: " + resource.fileName(), e);
         }
+
+        if (data == null) return resource.createDefault();
+
+        var validator = resource.validator();
+        if (validator != null) {
+            String validationErr = validator.apply(data);
+            if (validationErr != null) {
+                throw new IllegalStateException("%s in '%s'".formatted(validationErr, resource.fileName()));
+            }
+        }
+
+        HomePlugin.LOGGER.atInfo().log("%s loaded", resource.displayName());
+        return data;
     }
 }

@@ -3,20 +3,23 @@ package com.wardlordruby.plugin.models;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public final record JsonResource<T>(
     @Nonnull String fileName,
     @Nonnull String displayName,
     Type type,
-    Supplier<T> defaultValue
+    @Nonnull Supplier<T> defaultValue,
+    @Nullable Function<T, String> validator
 ) {
     public @Nonnull T createDefault() {
         T value = defaultValue.get();
         if (value == null) {
-            throw new AssertionError("Default supplier for " + fileName + " returned null");
+            throw new AssertionError("Default supplier for %s returned null".formatted(fileName));
         }
         return value;
     }
@@ -26,7 +29,8 @@ public final record JsonResource<T>(
             "homes.json",
             "Player homes",
             new TypeToken<HomeMap>() {}.getType(),
-            HomeMap::new
+            HomeMap::new,
+            HomeMap::validator
         );
 
     public static final JsonResource<PluginConfig> CONFIG =
@@ -34,6 +38,7 @@ public final record JsonResource<T>(
             "config.json",
             "Plugin config",
             new TypeToken<PluginConfig>() {}.getType(),
-            PluginConfig::new
+            PluginConfig::new,
+            PluginConfig::validator
         );
 }

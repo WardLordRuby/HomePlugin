@@ -5,6 +5,7 @@ import com.wardlordruby.plugin.models.HomeMap;
 import com.wardlordruby.plugin.models.JsonResource;
 import com.wardlordruby.plugin.models.Permissions;
 import com.wardlordruby.plugin.models.PlayerHomeResult;
+import com.wardlordruby.plugin.models.PluginConfig;
 import com.wardlordruby.plugin.models.PluginConfig.HomeConfig;
 import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.services.JsonStorageService;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -27,7 +29,6 @@ import javax.annotation.Nonnull;
 
 public class PlayerHomeManager {
     private static final String TMP_WORLD_INDICATOR = "instance-";
-    private static final short MAX_HOMES = 100;
 
     private final @Nonnull HomeMap homeMap;
 
@@ -47,16 +48,16 @@ public class PlayerHomeManager {
 
     /// Success value is guaranteed to contain a `TeleportEntry`
     @SuppressWarnings("null") // the passed in fn only gets called if `playerHomes` is not null
-    public @Nonnull PlayerHomeResult get(@Nonnull String tag, @Nonnull UUID playerID) {
-        return get(playerID, playerHomes -> query(tag, playerHomes)
+    public @Nonnull PlayerHomeResult get(@Nonnull String id, @Nonnull UUID playerID) {
+        return get(playerID, playerHomes -> query(id, playerHomes)
             .<PlayerHomeResult>map(home -> new PlayerHomeResult.Success<>(home))
-            .orElseGet(() -> new PlayerHomeResult.HomeNotFound(tag))
+            .orElseGet(() -> new PlayerHomeResult.HomeNotFound(id))
         );
     }
 
     /// Success value is guaranteed to contain a `String` (success message)
     public @Nonnull PlayerHomeResult insert(
-        @Nonnull String tag,
+        @Nonnull String id,
         @Nonnull String worldName,
         @Nonnull UUID playerID,
         @Nonnull Transform playerTransform
@@ -65,11 +66,8 @@ public class PlayerHomeManager {
             return PlayerHomeResult.IllegalWorld.temporary();
         }
 
-        String[] bannedWorlds = HomePlugin.getConfig().homeConfig.bannedHomeWorlds;
-
-        for (String banned : bannedWorlds) {
-            if (banned.equals(worldName)) return PlayerHomeResult.IllegalWorld.banned(banned);
-        }
+        Set<String> bannedWorlds = HomePlugin.getConfig().homeConfig.bannedHomeWorlds;
+        if (bannedWorlds.contains(worldName)) return PlayerHomeResult.IllegalWorld.banned(worldName);
 
         int homeLimit = getHomeLimit(playerID);
 
@@ -82,33 +80,33 @@ public class PlayerHomeManager {
             return new PlayerHomeResult.MaxHomesReached(playerHomes.size(), homeLimit);
         }
 
-        Optional<TeleportEntry> matchingHome = query(tag, playerHomes);
+        Optional<TeleportEntry> matchingHome = query(id, playerHomes);
         matchingHome.ifPresentOrElse(
             playerHome -> playerHome.update(worldName, playerTransform),
-            () -> playerHomes.add(new TeleportEntry(tag, worldName, playerTransform))
+            () -> playerHomes.add(new TeleportEntry(id, worldName, playerTransform))
         );
 
         return new PlayerHomeResult.Success<>(
-            "Home: '" + tag + (matchingHome.isPresent() ? "' updated!" :"' saved!")
+            "Home: '" + id + (matchingHome.isPresent() ? "' updated!" :"' saved!")
         );
     }
 
     /// Success value is guaranteed to contain a `String` (success message)
-    public @Nonnull PlayerHomeResult setDefault(@Nonnull String tag, @Nonnull UUID playerID) {
-        return findHomeIndex(tag, playerID, (homes, i) -> {
+    public @Nonnull PlayerHomeResult setDefault(@Nonnull String id, @Nonnull UUID playerID) {
+        return findHomeIndex(id, playerID, (homes, i) -> {
             if (i == 0) {
-                return new PlayerHomeResult.AlreadyDefault(tag);
+                return new PlayerHomeResult.AlreadyDefault(id);
             }
             Collections.swap(homes, i, 0);
-            return new PlayerHomeResult.Success<>("Set home: '" + tag + "' as default!");
+            return new PlayerHomeResult.Success<>("Set home: '" + id + "' as default!");
         });
     }
 
     /// Success value is guaranteed to contain a `String` (success message)
-    public @Nonnull PlayerHomeResult remove(@Nonnull String tag, @Nonnull UUID playerID) {
-        return findHomeIndex(tag, playerID, (homes, i) -> {
+    public @Nonnull PlayerHomeResult remove(@Nonnull String id, @Nonnull UUID playerID) {
+        return findHomeIndex(id, playerID, (homes, i) -> {
             homes.remove((int)i);
-            return new PlayerHomeResult.Success<>("Home: '" + tag + "' removed!");
+            return new PlayerHomeResult.Success<>("Home: '" + id + "' removed!");
         });
     }
 
@@ -120,7 +118,7 @@ public class PlayerHomeManager {
 
         String list = verbose
             ? playerHomes.stream().map(TeleportEntry::display).collect(Collectors.joining("\n"))
-            : playerHomes.stream().map(home -> home.tag).collect(Collectors.joining(", "));
+            : playerHomes.stream().map(home -> home.id).collect(Collectors.joining(", "));
 
         return new PlayerHomeResult.Success<>(new PlayerHomeResult.List(list, verbose));
     }
@@ -134,13 +132,13 @@ public class PlayerHomeManager {
         return playerHomes == null || playerHomes.isEmpty() ? new PlayerHomeResult.NoSetHomes() : fn.apply(playerHomes);
     }
 
-    private Optional<TeleportEntry> query(@Nonnull String tag, @Nonnull List<TeleportEntry> playerHomes) {
-        return playerHomes.stream().filter(entry -> entry.tag.equalsIgnoreCase(tag)).findFirst();
+    private Optional<TeleportEntry> query(@Nonnull String id, @Nonnull List<TeleportEntry> playerHomes) {
+        return playerHomes.stream().filter(entry -> entry.id.equalsIgnoreCase(id)).findFirst();
     }
 
     @SuppressWarnings("null")
     private @Nonnull PlayerHomeResult findHomeIndex(
-        @Nonnull String tag,
+        @Nonnull String id,
         @Nonnull UUID playerID,
         @Nonnull BiFunction<List<TeleportEntry>, Integer, PlayerHomeResult> onFound
     ) {
@@ -148,28 +146,28 @@ public class PlayerHomeManager {
         if (playerHomes == null || playerHomes.isEmpty()) return new PlayerHomeResult.NoSetHomes();
 
         OptionalInt index = IntStream.range(0, playerHomes.size())
-            .filter(i -> playerHomes.get(i).tag.equalsIgnoreCase(tag))
+            .filter(i -> playerHomes.get(i).id.equalsIgnoreCase(id))
             .findFirst();
 
-        return index.isPresent() ? onFound.apply(playerHomes, index.getAsInt()) : new PlayerHomeResult.HomeNotFound(tag);
+        return index.isPresent() ? onFound.apply(playerHomes, index.getAsInt()) : new PlayerHomeResult.HomeNotFound(id);
     }
 
     private static int getHomeLimit(@Nonnull UUID playerID) {
         PermissionsModule permManager = PermissionsModule.get();
 
         if (permManager.hasPermission(playerID, Permissions.HOME_RANK + ".*")) {
-            return MAX_HOMES;
+            return PluginConfig.MAX_HOMES;
         }
 
         HomeConfig homeConfig = HomePlugin.getConfig().homeConfig;
-        int[] homeLimits = homeConfig.homeCountByRank;
+        Short[] homeLimits = homeConfig.homeCountByRank;
 
         for (int i = homeLimits.length - 1; i >= 0; i--) {
             if (permManager.hasPermission(playerID, Permissions.HOME_RANK + "." + (i + 1))) {
-                return Math.min(homeLimits[i], MAX_HOMES);
+                return Math.min(homeLimits[i], PluginConfig.MAX_HOMES);
             }
         }
 
-        return Math.min(homeConfig.baseHomeCount, MAX_HOMES);
+        return Math.min(homeConfig.baseHomeCount, PluginConfig.MAX_HOMES);
     }
 }

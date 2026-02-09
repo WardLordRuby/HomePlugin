@@ -33,12 +33,14 @@ public class PluginManagementCommandCollection extends AbstractCommandCollection
                 return fileManager.read(JsonResource.CONFIG);
             }).thenAccept(config -> {
                 HomePlugin.setConfig(config);
-                String successMsg = "'%s' reloaded!".formatted(JsonResource.CONFIG.fileName());
-                context.sendMessage(HomePlugin.formatPlayerMessage(successMsg));
+                String successMsg = "'%s' reloaded!".formatted(JsonResource.CONFIG.displayName());
                 HomePlugin.LOGGER.atInfo().log(successMsg);
+                context.sendMessage(HomePlugin.formatPlayerMessage(successMsg));
             }).exceptionally(ex -> {
                 Throwable cause = ex instanceof CompletionException ? ex.getCause() : ex;
-                HomePlugin.LOGGER.atWarning().log("Failed to read '%s'. %s", JsonResource.CONFIG.fileName(), cause.getMessage());
+                String errMessage = "Failed to reload '%s'. %s".formatted(JsonResource.CONFIG.fileName(), cause.getMessage());
+                HomePlugin.LOGGER.atSevere().log(errMessage);
+                context.sendMessage(HomePlugin.formatPlayerMessage(errMessage));
                 return null;
             });
         }
