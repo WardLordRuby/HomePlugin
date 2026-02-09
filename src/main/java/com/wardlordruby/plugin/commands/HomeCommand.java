@@ -2,10 +2,10 @@ package com.wardlordruby.plugin.commands;
 
 import com.wardlordruby.plugin.HomePlugin;
 import com.wardlordruby.plugin.managers.PlayerHomeManager;
+import com.wardlordruby.plugin.models.HomeLocation;
 import com.wardlordruby.plugin.models.Permissions;
 import com.wardlordruby.plugin.models.PlayerHomeResult;
 import com.wardlordruby.plugin.models.PlayerMetaData;
-import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.utils.TeleportHistoryUtil;
 
 import com.hypixel.hytale.component.ComponentType;
@@ -180,12 +180,13 @@ public class HomeCommand extends AbstractAsyncCommand {
             return COMPLETED_FUTURE;
         }
 
-        TeleportEntry playerHome = (TeleportEntry)((PlayerHomeResult.Success<?>)playerHomeRes).get();
+        HomeLocation playerHome = (HomeLocation)((PlayerHomeResult.Success<?>)playerHomeRes).get();
+        String homeWorld = playerHome.getWorld();
 
         Store<EntityStore> store = ref.getStore();
         World world = store.getExternalData().getWorld();
 
-        World targetWorld = world.getName().equals(playerHome.world) ? world : Universe.get().getWorld(playerHome.world);
+        World targetWorld = world.getName().equals(homeWorld) ? world : Universe.get().getWorld(homeWorld);
 
         if (targetWorld == null) {
             context.sendMessage(Message.translation(WORLD_NOT_LOADED));
@@ -194,8 +195,8 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         world.execute(() -> {
             TransformComponent senderTransform = Objects.requireNonNull(store.getComponent(ref, transformComponentType));
-            TeleportHistoryUtil.append(ref, store, world, senderTransform.getTransform(), targetWorld.getName(), playerHome.position);
-            Teleport playerTeleport = Teleport.createForPlayer(targetWorld, playerHome.position, playerHome.rotation);
+            TeleportHistoryUtil.append(ref, store, world, senderTransform.getTransform(), targetWorld.getName(), playerHome.getPosition());
+            Teleport playerTeleport = Teleport.createForPlayer(targetWorld, playerHome.getPosition(), playerHome.getRotation());
             store.addComponent(ref, teleportComponentType, playerTeleport);
         });
 

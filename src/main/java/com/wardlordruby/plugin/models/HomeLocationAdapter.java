@@ -10,23 +10,27 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 
-public class TeleportEntryAdapter extends TypeAdapter<TeleportEntry> {
+public class HomeLocationAdapter extends TypeAdapter<HomeLocation> {
     @Override
-    public void write(JsonWriter out, TeleportEntry entry) throws IOException {
+    public void write(JsonWriter out, HomeLocation entry) throws IOException {
         out.beginObject();
         out.name("id").value(entry.id);
-        out.name("world").value(entry.world);
-        out.name("x").value(entry.position.x);
-        out.name("y").value(entry.position.y);
-        out.name("z").value(entry.position.z);
-        out.name("pitch").value(entry.rotation.x);
-        out.name("yaw").value(entry.rotation.y);
-        out.name("roll").value(entry.rotation.z);
+        out.name("world").value(entry.getWorld());
+
+        Vector3d position = entry.getPosition();
+        out.name("x").value(position.x);
+        out.name("y").value(position.y);
+        out.name("z").value(position.z);
+
+        Vector3f rotation = entry.getRotation();
+        out.name("pitch").value(rotation.x);
+        out.name("yaw").value(rotation.y);
+        out.name("roll").value(rotation.z);
         out.endObject();
     }
 
     @Override
-    public TeleportEntry read(JsonReader in) throws IOException {
+    public HomeLocation read(JsonReader in) throws IOException {
         String id = null;
         String world = null;
         double x = 0, y = 0, z = 0;
@@ -55,6 +59,6 @@ public class TeleportEntryAdapter extends TypeAdapter<TeleportEntry> {
         if (id == null) throw new IllegalStateException("found id set as null");
         if (world == null) throw new IllegalStateException("found world set as null");
 
-        return new TeleportEntry(id, world, transform);
+        return new HomeLocation(id, world, transform);
     }
 }

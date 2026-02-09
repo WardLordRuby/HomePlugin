@@ -1,13 +1,13 @@
 package com.wardlordruby.plugin.managers;
 
 import com.wardlordruby.plugin.HomePlugin;
+import com.wardlordruby.plugin.models.HomeLocation;
 import com.wardlordruby.plugin.models.HomeMap;
 import com.wardlordruby.plugin.models.JsonResource;
 import com.wardlordruby.plugin.models.Permissions;
 import com.wardlordruby.plugin.models.PlayerHomeResult;
 import com.wardlordruby.plugin.models.PluginConfig;
 import com.wardlordruby.plugin.models.PluginConfig.HomeConfig;
-import com.wardlordruby.plugin.models.TeleportEntry;
 import com.wardlordruby.plugin.services.JsonStorageService;
 
 import com.hypixel.hytale.math.vector.Transform;
@@ -40,13 +40,13 @@ public class PlayerHomeManager {
         fileManager.write(homeMap, JsonResource.HOMES);
     }
 
-    /// Success value is guaranteed to contain a `TeleportEntry`
+    /// Success value is guaranteed to contain a `HomeLocation`
     @SuppressWarnings("null") // `get` ensures `playerHomes` is not empty by this point
     public @Nonnull PlayerHomeResult getDefault(@Nonnull UUID playerID) {
         return get(playerID, playerHomes -> new PlayerHomeResult.Success<>(playerHomes.get(0)));
     }
 
-    /// Success value is guaranteed to contain a `TeleportEntry`
+    /// Success value is guaranteed to contain a `HomeLocation`
     @SuppressWarnings("null") // the passed in fn only gets called if `playerHomes` is not null
     public @Nonnull PlayerHomeResult get(@Nonnull String id, @Nonnull UUID playerID) {
         return get(playerID, playerHomes -> query(id, playerHomes)
@@ -71,7 +71,7 @@ public class PlayerHomeManager {
 
         int homeLimit = getHomeLimit(playerID);
 
-        List<TeleportEntry> playerHomes = homeMap.computeIfAbsent(
+        List<HomeLocation> playerHomes = homeMap.computeIfAbsent(
             playerID,
             k -> new ArrayList<>()
         );
@@ -80,10 +80,10 @@ public class PlayerHomeManager {
             return new PlayerHomeResult.MaxHomesReached(playerHomes.size(), homeLimit);
         }
 
-        Optional<TeleportEntry> matchingHome = query(id, playerHomes);
+        Optional<HomeLocation> matchingHome = query(id, playerHomes);
         matchingHome.ifPresentOrElse(
             playerHome -> playerHome.update(worldName, playerTransform),
-            () -> playerHomes.add(new TeleportEntry(id, worldName, playerTransform))
+            () -> playerHomes.add(new HomeLocation(id, worldName, playerTransform))
         );
 
         return new PlayerHomeResult.Success<>(
@@ -113,11 +113,11 @@ public class PlayerHomeManager {
     /// Success value is guaranteed to contain a `String` (formatted home list)
     @SuppressWarnings("null")
     public @Nonnull PlayerHomeResult list(@Nonnull UUID playerID, boolean verbose) {
-        List<TeleportEntry> playerHomes = homeMap.get(playerID);
+        List<HomeLocation> playerHomes = homeMap.get(playerID);
         if (playerHomes == null || playerHomes.isEmpty()) return new PlayerHomeResult.NoSetHomes();
 
         String list = verbose
-            ? playerHomes.stream().map(TeleportEntry::display).collect(Collectors.joining("\n"))
+            ? playerHomes.stream().map(HomeLocation::display).collect(Collectors.joining("\n"))
             : playerHomes.stream().map(home -> home.id).collect(Collectors.joining(", "));
 
         return new PlayerHomeResult.Success<>(new PlayerHomeResult.List(list, verbose));
@@ -126,13 +126,13 @@ public class PlayerHomeManager {
     @SuppressWarnings("null") // Trust that the supplied function doesn't return null
     private @Nonnull PlayerHomeResult get(
         @Nonnull UUID playerID,
-        @Nonnull Function<List<TeleportEntry>, PlayerHomeResult> fn
+        @Nonnull Function<List<HomeLocation>, PlayerHomeResult> fn
     ) {
-        List<TeleportEntry> playerHomes = homeMap.get(playerID);
+        List<HomeLocation> playerHomes = homeMap.get(playerID);
         return playerHomes == null || playerHomes.isEmpty() ? new PlayerHomeResult.NoSetHomes() : fn.apply(playerHomes);
     }
 
-    private Optional<TeleportEntry> query(@Nonnull String id, @Nonnull List<TeleportEntry> playerHomes) {
+    private Optional<HomeLocation> query(@Nonnull String id, @Nonnull List<HomeLocation> playerHomes) {
         return playerHomes.stream().filter(entry -> entry.id.equalsIgnoreCase(id)).findFirst();
     }
 
@@ -140,9 +140,9 @@ public class PlayerHomeManager {
     private @Nonnull PlayerHomeResult findHomeIndex(
         @Nonnull String id,
         @Nonnull UUID playerID,
-        @Nonnull BiFunction<List<TeleportEntry>, Integer, PlayerHomeResult> onFound
+        @Nonnull BiFunction<List<HomeLocation>, Integer, PlayerHomeResult> onFound
     ) {
-        List<TeleportEntry> playerHomes = homeMap.get(playerID);
+        List<HomeLocation> playerHomes = homeMap.get(playerID);
         if (playerHomes == null || playerHomes.isEmpty()) return new PlayerHomeResult.NoSetHomes();
 
         OptionalInt index = IntStream.range(0, playerHomes.size())

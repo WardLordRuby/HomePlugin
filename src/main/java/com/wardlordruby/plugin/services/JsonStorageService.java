@@ -1,9 +1,9 @@
 package com.wardlordruby.plugin.services;
 
 import com.wardlordruby.plugin.HomePlugin;
+import com.wardlordruby.plugin.models.HomeLocation;
+import com.wardlordruby.plugin.models.HomeLocationAdapter;
 import com.wardlordruby.plugin.models.JsonResource;
-import com.wardlordruby.plugin.models.TeleportEntry;
-import com.wardlordruby.plugin.models.TeleportEntryAdapter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,7 +19,7 @@ import javax.annotation.Nonnull;
 public class JsonStorageService {
     private static final Gson gson = new GsonBuilder()
         .setPrettyPrinting()
-        .registerTypeAdapter(TeleportEntry.class, new TeleportEntryAdapter())
+        .registerTypeAdapter(HomeLocation.class, new HomeLocationAdapter())
         .create();
 
     private final File baseDirectory;

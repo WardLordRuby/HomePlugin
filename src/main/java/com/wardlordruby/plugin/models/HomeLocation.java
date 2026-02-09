@@ -1,28 +1,34 @@
 package com.wardlordruby.plugin.models;
 
+import com.hypixel.hytale.math.vector.Location;
 import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
 
 import javax.annotation.Nonnull;
 
-public class TeleportEntry {
+public class HomeLocation extends Location {
     public final @Nonnull String id;
-    public @Nonnull String world;
-    public @Nonnull Vector3d position;
-    public @Nonnull Vector3f rotation;
 
-    public TeleportEntry(@Nonnull String id, @Nonnull String world, @Nonnull Transform transform) {
+    public HomeLocation(@Nonnull String id, @Nonnull String world, @Nonnull Transform transform) {
+        super(world, transform.getPosition().clone(), transform.getRotation().clone());
         this.id = id;
-        this.world = world;
-        this.position = transform.getPosition().clone();
-        this.rotation = transform.getRotation().clone();
+    }
+
+    @Override
+    public void setPosition(@Nonnull Vector3d position) {
+        this.position = position.clone();
+    }
+
+    @Override
+    public void setRotation(@Nonnull Vector3f rotation) {
+        this.rotation = rotation.clone();
     }
 
     public void update(@Nonnull String world, @Nonnull Transform transform) {
         this.world = world;
-        this.position = transform.getPosition().clone();
-        this.rotation = transform.getRotation().clone();
+        setPosition(transform.getPosition());
+        setRotation(transform.getRotation());
     }
 
     @SuppressWarnings("null")
