@@ -4,6 +4,7 @@ import com.wardlordruby.plugin.HomePlugin;
 
 import com.hypixel.hytale.builtin.teleport.components.TeleportHistory;
 import com.hypixel.hytale.component.ComponentAccessor;
+import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.math.vector.Vector3d;
@@ -17,6 +18,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class TeleportHistoryUtil {
+    private static final @Nonnull ComponentType<EntityStore, TeleportHistory> teleportHistoryComponentType =
+        TeleportHistory.getComponentType();
+
     public static void append(
         @Nonnull Ref<EntityStore> ref,
         @Nonnull ComponentAccessor<EntityStore> storeAccessor,
@@ -34,7 +38,7 @@ public final class TeleportHistoryUtil {
         @Nullable String nextWorld,
         @Nullable Vector3d nextPosition
     ) {
-        TeleportHistory history = storeAccessor.getComponent(ref, TeleportHistory.getComponentType());
+        TeleportHistory history = storeAccessor.getComponent(ref, teleportHistoryComponentType);
         Vector3d playerPosition = transform.getPosition();
 
         double historyMinDistance = HomePlugin.getConfig().teleportConfig.tpHistoryMinDistance;
@@ -60,7 +64,7 @@ public final class TeleportHistoryUtil {
 
         if (history == null) {
             history = new TeleportHistory();
-            storeAccessor.addComponent(ref, TeleportHistory.getComponentType(), history);
+            storeAccessor.addComponent(ref, teleportHistoryComponentType, history);
         }
 
         history.append(world, playerPosition.clone(), transform.getRotation().clone(), "");

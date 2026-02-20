@@ -54,8 +54,9 @@ public class HomeCommand extends AbstractAsyncCommand {
     @SuppressWarnings("null")
     private static final @Nonnull SingleArgumentType<PublicGameProfile> TYPE_PUB_PROFILE = ArgTypes.GAME_PROFILE_LOOKUP;
 
-    private final @Nonnull ComponentType<EntityStore, Teleport> teleportComponentType = Teleport.getComponentType();
+    @SuppressWarnings("null")
     private final @Nonnull ComponentType<EntityStore, TransformComponent> transformComponentType = TransformComponent.getComponentType();
+    private final @Nonnull ComponentType<EntityStore, Teleport> teleportComponentType = Teleport.getComponentType();
 
     public HomeCommand(@Nonnull PlayerHomeManager homeManager) {
         super("home", "Teleport back to your home");

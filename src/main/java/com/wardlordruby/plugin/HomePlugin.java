@@ -26,7 +26,7 @@ public class HomePlugin extends JavaPlugin {
 
     @SuppressWarnings("null") // Read will either throw or return a Nonnull
     private static @Nonnull PluginConfig config;
-    @SuppressWarnings("null") // getDataDirectory nor JsonStorageService will return a Nonnull
+    @SuppressWarnings("null") // getDataDirectory nor JsonStorageService will return null
     private static @Nonnull JsonStorageService fileManager;
 
     private final @Nullable PlayerHomeManager playerHomes;
