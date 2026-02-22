@@ -11,8 +11,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public sealed interface PlayerHomeResult {
-    @Nonnull String display();
     @Nonnull String display(@Nullable PlayerMetaData player);
+
+    default @Nonnull String display() {
+        return display(null);
+    }
 
     default boolean isSuccess() {
         return this instanceof Success<?>;
@@ -23,10 +26,6 @@ public sealed interface PlayerHomeResult {
     }
 
     record Success<T>(@Nonnull T value) implements PlayerHomeResult {
-        public @Nonnull String display() {
-            return display(null);
-        }
-
         @SuppressWarnings("null")
         public @Nonnull String display(@Nullable PlayerMetaData player) {
             if (player != null && !(value instanceof List)) throw new IllegalStateException();
@@ -59,10 +58,6 @@ public sealed interface PlayerHomeResult {
             return new IllegalWorld(world);
         }
 
-        public @Nonnull String display() {
-            return display(null);
-        }
-
         @SuppressWarnings("null")
         public @Nonnull String display(@Nullable PlayerMetaData player) {
             if (player != null) throw new IllegalStateException();
@@ -74,10 +69,6 @@ public sealed interface PlayerHomeResult {
     }
 
     record NoSetHomes() implements PlayerHomeResult {
-        public @Nonnull String display() {
-            return display(null);
-        }
-
         @SuppressWarnings("null")
         public @Nonnull String display(@Nullable PlayerMetaData player) {
             if (player == null) return "You have no homes set!";
@@ -97,10 +88,6 @@ public sealed interface PlayerHomeResult {
     }
 
     record HomeNotFound(@Nonnull String homeName) implements PlayerHomeResult {
-        public @Nonnull String display() {
-            return display(null);
-        }
-
         @SuppressWarnings("null")
         public @Nonnull String display(@Nullable PlayerMetaData player) {
             return player == null
@@ -110,10 +97,6 @@ public sealed interface PlayerHomeResult {
     }
 
     record AlreadyDefault(@Nonnull String homeName) implements PlayerHomeResult {
-        public @Nonnull String display() {
-            return display(null);
-        }
-
         @SuppressWarnings("null")
         public @Nonnull String display(@Nullable PlayerMetaData player) {
             if (player != null) throw new IllegalStateException();
@@ -122,10 +105,6 @@ public sealed interface PlayerHomeResult {
     }
 
     record MaxHomesReached(int curr, int max) implements PlayerHomeResult {
-        public @Nonnull String display() {
-            return display(null);
-        }
-
         @SuppressWarnings("null")
         public @Nonnull String display(@Nullable PlayerMetaData player) {
             if (player != null) throw new IllegalStateException();
