@@ -1,14 +1,15 @@
 package com.wardlordruby.plugin.models;
 
+import com.hypixel.hytale.math.vector.Rotation3f;
 import com.hypixel.hytale.math.vector.Transform;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
+
+import org.joml.Vector3d;
 
 public class HomeLocationAdapter extends TypeAdapter<HomeLocation> {
     @Override
@@ -22,7 +23,7 @@ public class HomeLocationAdapter extends TypeAdapter<HomeLocation> {
         out.name("y").value(position.y);
         out.name("z").value(position.z);
 
-        Vector3f rotation = entry.getRotation();
+        Rotation3f rotation = entry.getRotation();
         out.name("pitch").value(rotation.x);
         out.name("yaw").value(rotation.y);
         out.name("roll").value(rotation.z);
@@ -53,7 +54,7 @@ public class HomeLocationAdapter extends TypeAdapter<HomeLocation> {
         in.endObject();
 
         Vector3d position = new Vector3d(x, y, z);
-        Vector3f rotation = new Vector3f(pitch, yaw, roll);
+        Rotation3f rotation = new Rotation3f(pitch, yaw, roll);
         Transform transform = new Transform(position, rotation);
 
         if (id == null) throw new IllegalStateException("found id set as null");

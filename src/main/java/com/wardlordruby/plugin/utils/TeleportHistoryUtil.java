@@ -7,7 +7,6 @@ import com.hypixel.hytale.component.ComponentAccessor;
 import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.vector.Transform;
-import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
@@ -16,6 +15,8 @@ import java.util.Deque;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.joml.Vector3d;
 
 public final class TeleportHistoryUtil {
     private static final @Nonnull ComponentType<EntityStore, TeleportHistory> teleportHistoryComponentType =
@@ -67,7 +68,14 @@ public final class TeleportHistoryUtil {
             storeAccessor.addComponent(ref, teleportHistoryComponentType, history);
         }
 
-        history.append(world, playerPosition.clone(), transform.getRotation().clone(), "");
+        history.append(world, new Vector3d(playerPosition.x, playerPosition.y, playerPosition.z), transform.getRotation().clone(), "");
+    }
+
+    private static double computeDistance(
+        @Nonnull Vector3d a,
+        @Nonnull Vector3d b
+    ) {
+        return Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2) + Math.pow(b.z - a.z, 2));
     }
 
     private static boolean playerWithinThreshold(
@@ -77,7 +85,7 @@ public final class TeleportHistoryUtil {
         @Nonnull Vector3d posB,
         double configuredDistance
     ) {
-        return worldA.equals(worldB) && posA.distanceTo(posB) <= configuredDistance;
+        return worldA.equals(worldB) && computeDistance(posA, posB) <= configuredDistance;
     }
 
     private static @Nullable TeleportHistory.Waypoint getLastWaypoint(TeleportHistory history) {

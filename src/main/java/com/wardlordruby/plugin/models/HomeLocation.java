@@ -1,27 +1,29 @@
 package com.wardlordruby.plugin.models;
 
 import com.hypixel.hytale.math.vector.Location;
+import com.hypixel.hytale.math.vector.Rotation3f;
 import com.hypixel.hytale.math.vector.Transform;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
 
 import javax.annotation.Nonnull;
+
+import org.joml.Vector3d;
 
 public class HomeLocation extends Location {
     public final @Nonnull String id;
 
     public HomeLocation(@Nonnull String id, @Nonnull String world, @Nonnull Transform transform) {
-        super(world, transform.getPosition().clone(), transform.getRotation().clone());
+        super(world, new Vector3d(transform.getPosition().x, transform.getPosition().y, transform.getPosition().z),
+            transform.getRotation().clone());
         this.id = id;
     }
 
     @Override
     public void setPosition(@Nonnull Vector3d position) {
-        this.position = position.clone();
+        this.position = new Vector3d(position.x, position.y, position.z);
     }
 
     @Override
-    public void setRotation(@Nonnull Vector3f rotation) {
+    public void setRotation(@Nonnull Rotation3f rotation) {
         this.rotation = rotation.clone();
     }
 

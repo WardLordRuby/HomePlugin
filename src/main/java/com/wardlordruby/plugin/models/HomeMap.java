@@ -3,6 +3,7 @@ package com.wardlordruby.plugin.models;
 import com.wardlordruby.plugin.HomePlugin;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -21,7 +22,13 @@ public final class HomeMap extends ConcurrentHashMap<UUID, ArrayList<HomeLocatio
                 String homeWorld = playerHomes.get(i).getWorld();
                 if (bannedWorlds.contains(homeWorld)) {
                     HomePlugin.LOGGER.atInfo().log("Removed illegal home in banned world: %s, from player: %s", homeWorld, entry.getKey());
-                    playerHomes.remove(i);
+                    if (i > 0) {
+                        int last = playerHomes.size() - 1;
+                        Collections.swap(playerHomes, i, last);
+                        playerHomes.remove(last);
+                    } else {
+                        playerHomes.remove(i);
+                    }
                 }
             }
         });

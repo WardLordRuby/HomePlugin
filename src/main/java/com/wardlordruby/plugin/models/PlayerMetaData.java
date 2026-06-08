@@ -33,7 +33,7 @@ public sealed interface PlayerMetaData {
 
     record Sender(@Nonnull UUID id, @Nonnull CommandSender sender) implements PlayerMetaData {
         public @Nonnull UUID getUuid() { return id; }
-        public @Nonnull String getUsername() { return Objects.requireNonNull(sender.getDisplayName()); }
+        public @Nonnull String getUsername() { return Objects.requireNonNull(sender.getUsername()); }
     }
 
     record Profile(@Nonnull UUID id, @Nonnull PublicGameProfile profile) implements PlayerMetaData {
