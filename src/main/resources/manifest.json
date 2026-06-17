@@ -2,6 +2,6 @@
   "Group": "com.wardlordruby",
   "Name": "HomePlugin",
   "Version": "0.1.0",
-  "ServerVersion": "=0.5.3",
+  "ServerVersion": ">=0.5.3",
   "Main": "com.wardlordruby.plugin.HomePlugin"
 }
