@@ -110,6 +110,11 @@ public class PlayerHomeManager {
         });
     }
 
+    /// Success value is guaranteed to contain a `String` (formatted concise home list)
+    public @Nonnull PlayerHomeResult list(@Nonnull UUID playerID) {
+        return list(playerID, false);
+    }
+
     /// Success value is guaranteed to contain a `String` (formatted home list)
     @SuppressWarnings("null")
     public @Nonnull PlayerHomeResult list(@Nonnull UUID playerID, boolean verbose) {

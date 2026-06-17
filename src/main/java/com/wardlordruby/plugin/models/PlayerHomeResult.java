@@ -1,20 +1,58 @@
 package com.wardlordruby.plugin.models;
 
 import com.wardlordruby.plugin.HomePlugin;
+import com.wardlordruby.plugin.managers.PlayerHomeManager;
 
 import com.hypixel.hytale.server.core.universe.Universe;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public sealed interface PlayerHomeResult {
+    static final @Nonnull String HELP_MSG_SET_HOME = "Use `/home set <NAME>` to update your home location";
+
     @Nonnull String display(@Nullable PlayerMetaData player);
 
     default @Nonnull String display() {
         return display(null);
+    }
+
+    @SuppressWarnings("null")
+    private @Nonnull String displayErrorWithString(@Nonnull Supplier<String> additional, @Nullable PlayerMetaData player) {
+        if (this.isSuccess()) throw new IllegalStateException();
+        String error = this.display(player);
+        String rest = additional.get();
+
+        return rest != null
+            ? "%s\n%s".formatted(error, rest)
+            : error;
+    }
+
+    private @Nonnull String displayErrorWithString(@Nonnull Supplier<String> additional) {
+        return displayErrorWithString(additional, null);
+    }
+
+    default @Nonnull String displayErrorWithHomeContext(@Nonnull PlayerHomeManager playerHomes, @Nonnull UUID playerID) {
+        return displayErrorWithString(() -> this instanceof PlayerHomeResult.NoSetHomes
+            ? HELP_MSG_SET_HOME
+            : playerHomes.list(playerID).display());
+    }
+
+    default @Nonnull String displayErrorWithSpecificHomeContext(@Nonnull PlayerHomeManager playerHomes, @Nonnull PlayerMetaData player) {
+        return displayErrorWithString(
+            () -> this instanceof PlayerHomeResult.HomeNotFound
+                ? playerHomes.list(player.getUuid()).display(player)
+                : null,
+            player
+        );
+    }
+
+    default @Nonnull String displayErrorWithSetHomeMsg() {
+        return displayErrorWithString(() -> HELP_MSG_SET_HOME);
     }
 
     default boolean isSuccess() {

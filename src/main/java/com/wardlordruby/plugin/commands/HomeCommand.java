@@ -45,18 +45,17 @@ public class HomeCommand extends AbstractAsyncCommand {
     @SuppressWarnings("null")
     private static final @Nonnull Message PLAYER_ONLY_COMMAND = HomePlugin.formatPlayerMessage("Wrong sender type, expecting Player")
         .color(Color.RED);
-    private static final @Nonnull String SET_HOME_HELP_MSG = "Use `/home set <NAME>` to update your home location";
 
     @SuppressWarnings("null")
     private static final @Nonnull CompletableFuture<Void> COMPLETED_FUTURE = CompletableFuture.completedFuture(null);
     @SuppressWarnings("null")
-    private static final @Nonnull SingleArgumentType<String> TYPE_STRING = ArgTypes.STRING;
+    private static final @Nonnull SingleArgumentType<String> ARG_TYPE_STRING = ArgTypes.STRING;
     @SuppressWarnings("null")
-    private static final @Nonnull SingleArgumentType<PublicGameProfile> TYPE_PUB_PROFILE = ArgTypes.GAME_PROFILE_LOOKUP;
+    private static final @Nonnull SingleArgumentType<PublicGameProfile> ARG_TYPE_PUB_PROFILE = ArgTypes.GAME_PROFILE_LOOKUP;
 
     @SuppressWarnings("null")
-    private final @Nonnull ComponentType<EntityStore, TransformComponent> transformComponentType = TransformComponent.getComponentType();
-    private final @Nonnull ComponentType<EntityStore, Teleport> teleportComponentType = Teleport.getComponentType();
+    private static final @Nonnull ComponentType<EntityStore, TransformComponent> COMPONENT_TYPE_TRANSFORM = TransformComponent.getComponentType();
+    private static final @Nonnull ComponentType<EntityStore, Teleport> COMPONENT_TYPE_TELEPORT = Teleport.getComponentType();
 
     public HomeCommand(@Nonnull PlayerHomeManager homeManager) {
         super("home", "Teleport back to your home");
@@ -79,7 +78,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             context,
             () -> PlayerMetaData.fromSender(context.sender()),
             playerID -> playerHomes.getDefault(playerID),
-            (playerHomeRes, _playerData) -> "%s\n%s".formatted(playerHomeRes.display(), SET_HOME_HELP_MSG)
+            (playerHomeRes, _playerData) -> playerHomeRes.displayErrorWithSetHomeMsg()
         ).exceptionally(HomeCommand::logException);
     }
 
@@ -98,12 +97,12 @@ public class HomeCommand extends AbstractAsyncCommand {
     }
 
     /// return value indicates success (`null`), or error with a message
-    private static @Nullable String validateHomeName(@Nonnull String hostName) {
-        if (hostName.isEmpty()) {
+    private static @Nullable String validateHomeName(@Nonnull String homeName) {
+        if (homeName.isEmpty()) {
             return "Home name can not be empty";
         }
         for (String name : SUBCOMMAND_NAME_OR_ALIAS) {
-            if (hostName.equalsIgnoreCase(name)) {
+            if (homeName.equalsIgnoreCase(name)) {
                 return "Can not set home name the same as a subcommand";
             }
         }
@@ -149,22 +148,27 @@ public class HomeCommand extends AbstractAsyncCommand {
         );
     }
 
+    private static boolean requirePlayer(CommandContext context) {
+        if (!context.isPlayer()) {
+            context.sendMessage(PLAYER_ONLY_COMMAND);
+            return false;
+        }
+        return true;
+    }
+
     private static Void logException(Throwable ex) {
         HomePlugin.LOGGER.atWarning().log(ex.getMessage());
         return null;
     }
 
     /// Must be called from within a method that will catch `NullPointerExceptions`
-    private @Nonnull CompletableFuture<Void> executeTeleport(
+    private static @Nonnull CompletableFuture<Void> executeTeleport(
         @Nonnull CommandContext context,
         Supplier<PlayerMetaData> targetPlayerDataFn,
         Function<UUID, PlayerHomeResult> targetHomeFn,
         BiFunction<PlayerHomeResult, PlayerMetaData, String> formatErrFn
     ) {
-        if (!context.isPlayer()) {
-            context.sendMessage(PLAYER_ONLY_COMMAND);
-            return COMPLETED_FUTURE;
-        }
+        if (!requirePlayer(context)) return COMPLETED_FUTURE;
 
         Ref<EntityStore> ref = Objects.requireNonNull(context.senderAsPlayerRef());
 
@@ -195,10 +199,10 @@ public class HomeCommand extends AbstractAsyncCommand {
         }
 
         world.execute(() -> {
-            TransformComponent senderTransform = Objects.requireNonNull(store.getComponent(ref, transformComponentType));
+            TransformComponent senderTransform = Objects.requireNonNull(store.getComponent(ref, COMPONENT_TYPE_TRANSFORM));
             TeleportHistoryUtil.append(ref, store, world, senderTransform.getTransform(), targetWorld.getName(), playerHome.getPosition());
             Teleport playerTeleport = Teleport.createForPlayer(targetWorld, playerHome.getPosition(), playerHome.getRotation());
-            store.addComponent(ref, teleportComponentType, playerTeleport);
+            store.addComponent(ref, COMPONENT_TYPE_TELEPORT, playerTeleport);
         });
 
         return COMPLETED_FUTURE;
@@ -212,10 +216,7 @@ public class HomeCommand extends AbstractAsyncCommand {
         @Nonnull PlayerHomeManager playerHomes,
         @Nonnull BiFunction<String, UUID, PlayerHomeResult> modifyFn
     ) {
-        if (!context.isPlayer()) {
-            context.sendMessage(PLAYER_ONLY_COMMAND);
-            return COMPLETED_FUTURE;
-        }
+        if (!requirePlayer(context)) return COMPLETED_FUTURE;
 
         String homeName = getValidatedHomeName(context, homeNameArg);
         if (homeName == null) return COMPLETED_FUTURE;
@@ -223,17 +224,11 @@ public class HomeCommand extends AbstractAsyncCommand {
         UUID playerID = Objects.requireNonNull(context.sender().getUuid());
         PlayerHomeResult result = modifyFn.apply(homeName, playerID);
 
-        if (result.isError()) {
-            @SuppressWarnings("null")
-            @Nonnull String errMsg = "%s\n%s".formatted(result.display(), result instanceof PlayerHomeResult.NoSetHomes
-                ? SET_HOME_HELP_MSG
-                : playerHomes.list(playerID, false).display());
+        @Nonnull String message = result.isError()
+            ? result.displayErrorWithHomeContext(playerHomes, playerID)
+            : result.display();
 
-            context.sendMessage(HomePlugin.formatPlayerMessage(errMsg));
-        } else {
-            context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
-        }
-
+        context.sendMessage(HomePlugin.formatPlayerMessage(message));
         return COMPLETED_FUTURE;
     }
 
@@ -242,7 +237,7 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         public SpecificHomeCommand() {
             super("Teleport to a specific home");
-            this.homeNameArg = withRequiredArg("name", "Name of your home", TYPE_STRING);
+            this.homeNameArg = withRequiredArg("name", "Name of your home", ARG_TYPE_STRING);
         }
 
         @SuppressWarnings("null")
@@ -252,13 +247,7 @@ public class HomeCommand extends AbstractAsyncCommand {
                 context,
                 () -> PlayerMetaData.fromSender(context.sender()),
                 playerID -> playerHomeResultFromArg(context, homeNameArg, playerID),
-                (playerHomeRes, playerData) -> "%s\n%s".formatted(
-                    playerHomeRes.display(),
-                    (playerHomeRes instanceof PlayerHomeResult.NoSetHomes
-                        ? SET_HOME_HELP_MSG
-                        : playerHomes.list(playerData.getUuid(), false).display()
-                    )
-                )
+                (playerHomeRes, playerData) -> playerHomeRes.displayErrorWithHomeContext(playerHomes, playerData.getUuid())
             ).exceptionally(HomeCommand::logException);
         }
     }
@@ -269,8 +258,8 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         public PlayerSpecificHomeCommand() {
             super("Teleport to a specific players home");
-            this.playerProfileArg = withRequiredArg("player", "Name of target player", TYPE_PUB_PROFILE);
-            this.homeNameArg = withRequiredArg("name", "Name of your home", TYPE_STRING);
+            this.playerProfileArg = withRequiredArg("player", "Name of target player", ARG_TYPE_PUB_PROFILE);
+            this.homeNameArg = withRequiredArg("name", "Name of your home", ARG_TYPE_STRING);
             this.requirePermission(Permissions.HOME_OTHERS);
         }
 
@@ -281,13 +270,7 @@ public class HomeCommand extends AbstractAsyncCommand {
                 context,
                 () -> PlayerMetaData.fromProfileArg(context, playerProfileArg),
                 playerID -> playerHomeResultFromArg(context, homeNameArg, playerID),
-                (playerHomeRes, playerData) -> {
-                    StringBuilder errMsg = new StringBuilder().append(playerHomeRes.display(playerData));
-                    if (playerHomeRes instanceof PlayerHomeResult.HomeNotFound) {
-                        errMsg.append('\n').append(playerHomes.list(playerData.getUuid(), false).display(playerData));
-                    }
-                    return errMsg.toString();
-                }
+                (playerHomeRes, playerData) -> playerHomeRes.displayErrorWithSpecificHomeContext(playerHomes, playerData)
             ).exceptionally(HomeCommand::logException);
         }
     }
@@ -311,10 +294,7 @@ public class HomeCommand extends AbstractAsyncCommand {
         }
 
         private @Nonnull CompletableFuture<Void> executeListHomes(@Nonnull CommandContext context) {
-            if (!context.isPlayer()) {
-                context.sendMessage(PLAYER_ONLY_COMMAND);
-                return COMPLETED_FUTURE;
-            }
+            if (!requirePlayer(context)) return COMPLETED_FUTURE;
 
             UUID senderID = Objects.requireNonNull(context.sender().getUuid());
             boolean verbose = verboseArg.get(context);
@@ -332,7 +312,7 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         public PlayerListHomesCommand() {
             super("List a specific players saved homes");
-            this.playerNameArg = withRequiredArg("player", "Name of target player", TYPE_PUB_PROFILE);
+            this.playerNameArg = withRequiredArg("player", "Name of target player", ARG_TYPE_PUB_PROFILE);
             this.verboseArg = withFlagArg("verbose", "Show detailed home information");
             this.requirePermission(Permissions.HOME_OTHERS);
         }
@@ -359,7 +339,7 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         public SetHomeCommand() {
             super("set", "Set home to your current position");
-            this.homeNameArg = withRequiredArg("name", "Name of your home", TYPE_STRING);
+            this.homeNameArg = withRequiredArg("name", "Name of your home", ARG_TYPE_STRING);
             this.requirePermission(Permissions.HOME);
             this.addAliases("add");
         }
@@ -371,10 +351,7 @@ public class HomeCommand extends AbstractAsyncCommand {
         }
 
         private @Nonnull CompletableFuture<Void> executeSetHome(@Nonnull CommandContext context) {
-            if (!context.isPlayer()) {
-                context.sendMessage(PLAYER_ONLY_COMMAND);
-                return COMPLETED_FUTURE;
-            }
+            if (!requirePlayer(context)) return COMPLETED_FUTURE;
 
             String homeName = getValidatedHomeName(context, homeNameArg);
             if (homeName == null) return COMPLETED_FUTURE;
@@ -386,7 +363,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             World world = store.getExternalData().getWorld();
 
             world.execute(() -> {
-                TransformComponent playerTransform = Objects.requireNonNull(store.getComponent(ref, transformComponentType));
+                TransformComponent playerTransform = Objects.requireNonNull(store.getComponent(ref, COMPONENT_TYPE_TRANSFORM));
                 PlayerHomeResult result = playerHomes.insert(homeName, world.getName(), playerID, playerTransform.getTransform());
                 context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
             });
@@ -400,7 +377,7 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         public SetDefaultHomeCommand() {
             super("default", "Set a saved home as default");
-            this.homeNameArg = withRequiredArg("name", "Name of your home", TYPE_STRING);
+            this.homeNameArg = withRequiredArg("name", "Name of your home", ARG_TYPE_STRING);
             this.requirePermission(Permissions.HOME);
         }
 
@@ -417,7 +394,7 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         public RemoveHomeCommand() {
             super("remove", "Delete a saved home");
-            this.homeNameArg = withRequiredArg("name", "Name of your home", TYPE_STRING);
+            this.homeNameArg = withRequiredArg("name", "Name of your home", ARG_TYPE_STRING);
             this.requirePermission(Permissions.HOME);
             this.addAliases("delete");
         }
