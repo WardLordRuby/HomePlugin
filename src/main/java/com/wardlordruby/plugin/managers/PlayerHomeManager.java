@@ -6,6 +6,7 @@ import com.wardlordruby.plugin.models.HomeMap;
 import com.wardlordruby.plugin.models.JsonResource;
 import com.wardlordruby.plugin.models.Permissions;
 import com.wardlordruby.plugin.models.PlayerHomeResult;
+import com.wardlordruby.plugin.models.PlayerHomeResult.Operation;
 import com.wardlordruby.plugin.models.PluginConfig;
 import com.wardlordruby.plugin.models.PluginConfig.HomeConfig;
 import com.wardlordruby.plugin.services.JsonStorageService;
@@ -22,7 +23,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.annotation.Nonnull;
@@ -55,7 +55,7 @@ public class PlayerHomeManager {
         );
     }
 
-    /// Success value is guaranteed to contain a `String` (success message)
+    /// Success value is guaranteed to contain a `PlayerHomeResult.Modification`
     public @Nonnull PlayerHomeResult insert(
         @Nonnull String id,
         @Nonnull String worldName,
@@ -87,45 +87,40 @@ public class PlayerHomeManager {
         );
 
         return new PlayerHomeResult.Success<>(
-            "Home: '" + id + (matchingHome.isPresent() ? "' updated!" :"' saved!")
+            new PlayerHomeResult.Modification(id, matchingHome.isPresent() ? Operation.MODIFY : Operation.INSERT)
         );
     }
 
-    /// Success value is guaranteed to contain a `String` (success message)
+    /// Success value is guaranteed to contain a `PlayerHomeResult.Modification`
     public @Nonnull PlayerHomeResult setDefault(@Nonnull String id, @Nonnull UUID playerID) {
         return findHomeIndex(id, playerID, (homes, i) -> {
             if (i == 0) {
                 return new PlayerHomeResult.AlreadyDefault(id);
             }
             Collections.swap(homes, i, 0);
-            return new PlayerHomeResult.Success<>("Set home: '" + id + "' as default!");
+            return new PlayerHomeResult.Success<>(new PlayerHomeResult.Modification(id, Operation.DEFAULT));
         });
     }
 
-    /// Success value is guaranteed to contain a `String` (success message)
+    /// Success value is guaranteed to contain a `PlayerHomeResult.Modification`
     public @Nonnull PlayerHomeResult remove(@Nonnull String id, @Nonnull UUID playerID) {
         return findHomeIndex(id, playerID, (homes, i) -> {
             homes.remove((int)i);
-            return new PlayerHomeResult.Success<>("Home: '" + id + "' removed!");
+            return new PlayerHomeResult.Success<>(new PlayerHomeResult.Modification(id, Operation.DELETE));
         });
     }
 
-    /// Success value is guaranteed to contain a `String` (formatted concise home list)
+    /// Success value is guaranteed to contain a `PlayerHomeResult.List`. This method defaults to
+    /// concise formatting
     public @Nonnull PlayerHomeResult list(@Nonnull UUID playerID) {
         return list(playerID, false);
     }
 
-    /// Success value is guaranteed to contain a `String` (formatted home list)
-    @SuppressWarnings("null")
+    /// Success value is guaranteed to contain a `PlayerHomeResult.List`
     public @Nonnull PlayerHomeResult list(@Nonnull UUID playerID, boolean verbose) {
         List<HomeLocation> playerHomes = homeMap.get(playerID);
         if (playerHomes == null || playerHomes.isEmpty()) return new PlayerHomeResult.NoSetHomes();
-
-        String list = verbose
-            ? playerHomes.stream().map(HomeLocation::display).collect(Collectors.joining("\n"))
-            : playerHomes.stream().map(home -> home.id).collect(Collectors.joining(", "));
-
-        return new PlayerHomeResult.Success<>(new PlayerHomeResult.List(list, verbose));
+        return new PlayerHomeResult.Success<>(new PlayerHomeResult.List(playerHomes, verbose));
     }
 
     @SuppressWarnings("null") // Trust that the supplied function doesn't return null

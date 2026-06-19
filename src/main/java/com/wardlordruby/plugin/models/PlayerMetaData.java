@@ -25,10 +25,7 @@ public sealed interface PlayerMetaData {
         @Nonnull RequiredArg<PublicGameProfile> playerProfileArg
     ) {
         @Nonnull PublicGameProfile targetPlayerProfile = Objects.requireNonNull(context.get(playerProfileArg));
-        return new Profile(
-            Objects.requireNonNull(targetPlayerProfile.getUuid()),
-            Objects.requireNonNull(targetPlayerProfile)
-        );
+        return new Profile(Objects.requireNonNull(targetPlayerProfile.getUuid()), targetPlayerProfile);
     }
 
     record Sender(@Nonnull UUID id, @Nonnull CommandSender sender) implements PlayerMetaData {

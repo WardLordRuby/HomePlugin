@@ -8,6 +8,7 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,10 +37,10 @@ public sealed interface PlayerHomeResult {
         return displayErrorWithString(additional, null);
     }
 
-    default @Nonnull String displayErrorWithHomeContext(@Nonnull PlayerHomeManager playerHomes, @Nonnull UUID playerID) {
+    default @Nonnull String displayErrorWithHomeContext(@Nonnull PlayerHomeManager playerHomes, @Nonnull PlayerMetaData player) {
         return displayErrorWithString(() -> this instanceof PlayerHomeResult.NoSetHomes
             ? HELP_MSG_SET_HOME
-            : playerHomes.list(playerID).display());
+            : playerHomes.list(player.getUuid()).display());
     }
 
     default @Nonnull String displayErrorWithSpecificHomeContext(@Nonnull PlayerHomeManager playerHomes, @Nonnull PlayerMetaData player) {
@@ -70,11 +71,15 @@ public sealed interface PlayerHomeResult {
 
             return switch (value) {
                 case String s -> s;
-                case List format -> {
+                case Modification m -> m.op == Operation.DEFAULT
+                    ? "Set home: '%s' as default!".formatted(m.homeID)
+                    : "Home: '%s' %s!".formatted(m.homeID, m.op.verb);
+                case List l -> {
                     String predicate = player == null ? "Available" : "%s's".formatted(player.getUsername());
-                    yield format.verbose
-                        ? "%s homes:\n%s".formatted(predicate, format.list)
-                        : "%s homes: [%s]".formatted(predicate, format.list);
+                    String list = l.verbose
+                        ? l.list.stream().map(HomeLocation::display).collect(Collectors.joining("\n"))
+                        : l.list.stream().map(home -> home.id).collect(Collectors.joining(", "));
+                    yield (l.verbose ? "%s homes:\n%s" : "%s homes: [%s]").formatted(predicate, list);
                 }
                 default -> value.toString();
             };
@@ -85,7 +90,18 @@ public sealed interface PlayerHomeResult {
         }
     }
 
-    record List(@Nonnull String list, boolean verbose) {}
+    enum Operation {
+        INSERT("saved"),
+        MODIFY("updated"),
+        DELETE("removed"),
+        DEFAULT(null);
+
+        final String verb;
+        Operation(String verb) { this.verb = verb; }
+    }
+
+    record Modification(@Nonnull String homeID, @Nonnull Operation op) {}
+    record List(@Nonnull java.util.List<HomeLocation> list, boolean verbose) {}
 
     record IllegalWorld(@Nullable String world) implements PlayerHomeResult {
         public static @Nonnull IllegalWorld temporary() {

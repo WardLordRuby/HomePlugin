@@ -21,6 +21,7 @@ import com.hypixel.hytale.server.core.command.system.arguments.types.SingleArgum
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractAsyncCommand;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -61,13 +62,13 @@ public class HomeCommand extends AbstractAsyncCommand {
         super("home", "Teleport back to your home");
         this.playerHomes = homeManager;
 
-        this.addSubCommand(new ListHomesCommand());
+        this.addUsageVariant(new SpecificHomeCommand());
         this.addSubCommand(new SetHomeCommand());
         this.addSubCommand(new SetDefaultHomeCommand());
         this.addSubCommand(new RemoveHomeCommand());
-        this.addUsageVariant(new SpecificHomeCommand());
+        this.addSubCommand(new ListHomesCommand());
         if (HomePlugin.getConfig().homeConfig.adminCommands) {
-            this.addUsageVariant(new PlayerSpecificHomeCommand());
+            this.addUsageVariant(new HomePlayerSpecificCommand());
         }
     }
 
@@ -208,28 +209,48 @@ public class HomeCommand extends AbstractAsyncCommand {
         return COMPLETED_FUTURE;
     }
 
-    /// Only to be used with `PlayerHomeManager` methods that have a return value of `Success<String>`
-    /// Must be called from within a method that will catch `NullPointerExceptions`
-    private static @Nonnull CompletableFuture<Void> executeOnPlayerManager(
+    /// Only to be used with `PlayerHomeManager` methods that have a return value of `PlayerHomeResult.Modification`.
+    /// This method will default to using the sender as the target player. Must be called from within a method that
+    /// will catch `NullPointerExceptions`
+    private static @Nonnull CompletableFuture<PlayerHomeResult> executeOnPlayerManager(
         @Nonnull CommandContext context,
         @Nonnull RequiredArg<String> homeNameArg,
         @Nonnull PlayerHomeManager playerHomes,
         @Nonnull BiFunction<String, UUID, PlayerHomeResult> modifyFn
     ) {
-        if (!requirePlayer(context)) return COMPLETED_FUTURE;
+        return executeOnPlayerManager(context, homeNameArg, playerHomes, modifyFn, null);
+    }
+
+    /// Only to be used with `PlayerHomeManager` methods that have a return value of `PlayerHomeResult.Modification`.
+    /// Must be called from within a method that will catch `NullPointerExceptions`
+    @SuppressWarnings("null")
+    private static @Nonnull CompletableFuture<PlayerHomeResult> executeOnPlayerManager(
+        @Nonnull CommandContext context,
+        @Nonnull RequiredArg<String> homeNameArg,
+        @Nonnull PlayerHomeManager playerHomes,
+        @Nonnull BiFunction<String, UUID, PlayerHomeResult> modifyFn,
+        @Nullable Supplier<PlayerMetaData> targetPlayerDataFn
+    ) {
+        boolean isPlayerCmd = targetPlayerDataFn == null;
+        if (isPlayerCmd && !requirePlayer(context)) return CompletableFuture.completedFuture(null);
 
         String homeName = getValidatedHomeName(context, homeNameArg);
-        if (homeName == null) return COMPLETED_FUTURE;
+        if (homeName == null) return CompletableFuture.completedFuture(null);
 
-        UUID playerID = Objects.requireNonNull(context.sender().getUuid());
-        PlayerHomeResult result = modifyFn.apply(homeName, playerID);
+        PlayerMetaData targetPlayer = isPlayerCmd ? PlayerMetaData.fromSender(context.sender()) : targetPlayerDataFn.get();
+        if (targetPlayer == null) return CompletableFuture.completedFuture(null);
 
+        PlayerHomeResult result = modifyFn.apply(homeName, targetPlayer.getUuid());
+
+        BiFunction<PlayerHomeManager, PlayerMetaData, String> errorFormatter = isPlayerCmd
+            ? result::displayErrorWithHomeContext
+            : result::displayErrorWithSpecificHomeContext;
         @Nonnull String message = result.isError()
-            ? result.displayErrorWithHomeContext(playerHomes, playerID)
+            ? errorFormatter.apply(playerHomes, targetPlayer)
             : result.display();
 
         context.sendMessage(HomePlugin.formatPlayerMessage(message));
-        return COMPLETED_FUTURE;
+        return CompletableFuture.completedFuture(result);
     }
 
     private class SpecificHomeCommand extends AbstractAsyncCommand {
@@ -247,16 +268,16 @@ public class HomeCommand extends AbstractAsyncCommand {
                 context,
                 () -> PlayerMetaData.fromSender(context.sender()),
                 playerID -> playerHomeResultFromArg(context, homeNameArg, playerID),
-                (playerHomeRes, playerData) -> playerHomeRes.displayErrorWithHomeContext(playerHomes, playerData.getUuid())
+                (playerHomeRes, playerData) -> playerHomeRes.displayErrorWithHomeContext(playerHomes, playerData)
             ).exceptionally(HomeCommand::logException);
         }
     }
 
-    private class PlayerSpecificHomeCommand extends AbstractAsyncCommand {
+    private class HomePlayerSpecificCommand extends AbstractAsyncCommand {
         private final @Nonnull RequiredArg<PublicGameProfile> playerProfileArg;
         private final @Nonnull RequiredArg<String> homeNameArg;
 
-        public PlayerSpecificHomeCommand() {
+        public HomePlayerSpecificCommand() {
             super("Teleport to a specific players home");
             this.playerProfileArg = withRequiredArg("player", "Name of target player", ARG_TYPE_PUB_PROFILE);
             this.homeNameArg = withRequiredArg("name", "Name of your home", ARG_TYPE_STRING);
@@ -283,7 +304,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             this.verboseArg = withFlagArg("verbose", "Show detailed home information");
             this.requirePermission(Permissions.HOME);
             if (HomePlugin.getConfig().homeConfig.adminCommands) {
-                this.addUsageVariant(new PlayerListHomesCommand());
+                this.addUsageVariant(new ListPlayerHomesCommand());
             }
         }
 
@@ -306,11 +327,11 @@ public class HomeCommand extends AbstractAsyncCommand {
         }
     }
 
-    private class PlayerListHomesCommand extends AbstractAsyncCommand {
+    private class ListPlayerHomesCommand extends AbstractAsyncCommand {
         private final @Nonnull RequiredArg<PublicGameProfile> playerNameArg;
         private final @Nonnull FlagArg verboseArg;
 
-        public PlayerListHomesCommand() {
+        public ListPlayerHomesCommand() {
             super("List a specific players saved homes");
             this.playerNameArg = withRequiredArg("player", "Name of target player", ARG_TYPE_PUB_PROFILE);
             this.verboseArg = withFlagArg("verbose", "Show detailed home information");
@@ -385,6 +406,7 @@ public class HomeCommand extends AbstractAsyncCommand {
         @Override
         protected @Nonnull CompletableFuture<Void> executeAsync(@Nonnull CommandContext context) {
             return executeOnPlayerManager(context, homeNameArg, playerHomes, playerHomes::setDefault)
+                .thenApply(_result -> (Void)null)
                 .exceptionally(HomeCommand::logException);
         }
     }
@@ -397,13 +419,51 @@ public class HomeCommand extends AbstractAsyncCommand {
             this.homeNameArg = withRequiredArg("name", "Name of your home", ARG_TYPE_STRING);
             this.requirePermission(Permissions.HOME);
             this.addAliases("delete");
+            if (HomePlugin.getConfig().homeConfig.adminCommands) {
+                this.addUsageVariant(new RemovePlayerHomeCommand());
+            }
         }
 
         @SuppressWarnings("null")
         @Override
         protected @Nonnull CompletableFuture<Void> executeAsync(@Nonnull CommandContext context) {
             return executeOnPlayerManager(context, homeNameArg, playerHomes, playerHomes::remove)
+                .thenApply(_result -> (Void)null)
                 .exceptionally(HomeCommand::logException);
+        }
+    }
+
+    private class RemovePlayerHomeCommand extends AbstractAsyncCommand {
+        private final @Nonnull RequiredArg<PublicGameProfile> playerNameArg;
+        private final @Nonnull RequiredArg<String> homeNameArg;
+
+        public RemovePlayerHomeCommand() {
+            super("Delete a specific players saved home");
+            this.playerNameArg = withRequiredArg("player", "Name of target player", ARG_TYPE_PUB_PROFILE);
+            this.homeNameArg = withRequiredArg("name", "Name of players home", ARG_TYPE_STRING);
+            this.requirePermission(Permissions.HOME_OTHERS);
+        }
+
+        @SuppressWarnings("null")
+        @Override
+        protected @Nonnull CompletableFuture<Void> executeAsync(@Nonnull CommandContext context) {
+            return executePlayerRemoveHome(context).exceptionally(HomeCommand::logException);
+        }
+
+        @SuppressWarnings("null")
+        private @Nonnull CompletableFuture<Void> executePlayerRemoveHome(@Nonnull CommandContext context) {
+            PlayerMetaData playerData = PlayerMetaData.fromProfileArg(context, playerNameArg);
+
+            return executeOnPlayerManager(context, homeNameArg, playerHomes, playerHomes::remove, () -> playerData).thenApply(result -> {
+                if (result.isSuccess()) {
+                    PlayerRef player = Universe.get().getPlayer(playerData.getUuid());
+                    if (player != null && player.isValid()) {
+                        PlayerHomeResult.Modification mod = (PlayerHomeResult.Modification)((PlayerHomeResult.Success<?>)result).get();
+                        player.sendMessage(HomePlugin.formatPlayerMessage("Your home '%s', was removed by an Admin".formatted(mod.homeID())));
+                    }
+                }
+                return (Void)null;
+            });
         }
     }
 }

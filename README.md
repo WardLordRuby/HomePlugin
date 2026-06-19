@@ -23,17 +23,18 @@ This plugin is split into modules, each of which can be loaded independently. Th
 
 ### Added commands
 
-| Commands                     | permission                                        | Description                                                  |
-| ---------------------------- | ------------------------------------------------- | ------------------------------------------------------------ |
-| [`/home`](#home)             | `com.wardlordruby.homeplugin.command.home`        | Teleports player to their default home                       |
-| `/home <name>`               | `com.wardlordruby.homeplugin.command.home`        | Teleports player to their specified home                     |
-| `/home <player> <name>`      | `com.wardlordruby.homeplugin.command.home.others` | Teleports player to selected players specified home          |
-| `/home set <name>`           | `com.wardlordruby.homeplugin.command.home`        | Sets the players home to their current position              |
-| `/home default <name>`       | `com.wardlordruby.homeplugin.command.home`        | Sets the players specified home as default                   |
-| `/home remove <name>`        | `com.wardlordruby.homeplugin.command.home`        | Removes the players specified home                           |
-| `/home list`                 | `com.wardlordruby.homeplugin.command.home`        | Lists the players set homes, use --verbose for detailed list |
-| `/home list <player>`        | `com.wardlordruby.homeplugin.command.home.others` | Lists the selected players set homes                         |
-| [`/back`](#back)             | `com.wardlordruby.homeplugin.command.back`        | Teleports the player to the last entry in `TeleportHistory`  |
+| Commands                       | permission                                        | Description                                                  |
+| ----------------------------   | ------------------------------------------------- | ------------------------------------------------------------ |
+| [`/home`](#home)               | `com.wardlordruby.homeplugin.command.home`        | Teleports player to their default home                       |
+| `/home <name>`                 | `com.wardlordruby.homeplugin.command.home`        | Teleports player to their specified home                     |
+| `/home <player> <name>`        | `com.wardlordruby.homeplugin.command.home.others` | Teleports player to selected players specified home          |
+| `/home set <name>`             | `com.wardlordruby.homeplugin.command.home`        | Sets the players home to their current position              |
+| `/home default <name>`         | `com.wardlordruby.homeplugin.command.home`        | Sets the players specified home as default                   |
+| `/home remove <name>`          | `com.wardlordruby.homeplugin.command.home`        | Removes the players specified home                           |
+| `/home remove <player> <name>` | `com.wardlordruby.homeplugin.command.home.others` | Removes a specific players specified home                    |
+| `/home list`                   | `com.wardlordruby.homeplugin.command.home`        | Lists the players set homes, use --verbose for detailed list |
+| `/home list <player>`          | `com.wardlordruby.homeplugin.command.home.others` | Lists the selected players set homes                         |
+| [`/back`](#back)               | `com.wardlordruby.homeplugin.command.back`        | Teleports the player to the last entry in `TeleportHistory`  |
 
 ## Home
 

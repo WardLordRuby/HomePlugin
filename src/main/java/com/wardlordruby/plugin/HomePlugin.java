@@ -60,7 +60,7 @@ public class HomePlugin extends JavaPlugin {
     }
 
     @SuppressWarnings("null")
-    public static @Nonnull Message formatPlayerMessage(@Nonnull String msg) {
+    public static @Nonnull Message formatPlayerMessage(String msg) {
         return Message.raw("[%s] %s".formatted(PLUGIN_NAME, msg));
     }
 
