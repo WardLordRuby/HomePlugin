@@ -29,20 +29,20 @@ public class PluginManagementCommandCollection extends AbstractCommandCollection
         protected @Nonnull CompletableFuture<Void> executeAsync(@Nonnull CommandContext context) {
             JsonStorageService fileManager = HomePlugin.getFileManager();
 
-            return CompletableFuture.supplyAsync(() -> {
-                return fileManager.read(JsonResource.CONFIG);
-            }).thenAccept(config -> {
-                HomePlugin.setConfig(config);
-                String successMsg = "'%s' reloaded!".formatted(JsonResource.CONFIG.displayName());
-                HomePlugin.LOGGER.atInfo().log(successMsg);
-                context.sendMessage(HomePlugin.formatPlayerMessage(successMsg));
-            }).exceptionally(ex -> {
-                Throwable cause = ex instanceof CompletionException ? ex.getCause() : ex;
-                String errMessage = "Failed to reload '%s'. %s".formatted(JsonResource.CONFIG.fileName(), cause.getMessage());
-                HomePlugin.LOGGER.atSevere().log(errMessage);
-                context.sendMessage(HomePlugin.formatPlayerMessage(errMessage));
-                return null;
-            });
+            return CompletableFuture.supplyAsync(() -> fileManager.read(JsonResource.CONFIG))
+                .thenAccept(config -> {
+                    HomePlugin.setConfig(config);
+                    String successMsg = "'%s' reloaded!".formatted(JsonResource.CONFIG.displayName());
+                    HomePlugin.LOGGER.atInfo().log(successMsg);
+                    context.sendMessage(HomePlugin.formatPlayerMessage(successMsg));
+                })
+                .exceptionally(ex -> {
+                    Throwable cause = ex instanceof CompletionException ? ex.getCause() : ex;
+                    String errMessage = "Failed to reload '%s'. %s".formatted(JsonResource.CONFIG.fileName(), cause.getMessage());
+                    HomePlugin.LOGGER.atSevere().log(errMessage);
+                    context.sendMessage(HomePlugin.formatPlayerMessage(errMessage));
+                    return null;
+                });
         }
     }
 }

@@ -48,8 +48,6 @@ public class HomeCommand extends AbstractAsyncCommand {
         .color(Color.RED);
 
     @SuppressWarnings("null")
-    private static final @Nonnull CompletableFuture<Void> COMPLETED_FUTURE = CompletableFuture.completedFuture(null);
-    @SuppressWarnings("null")
     private static final @Nonnull SingleArgumentType<String> ARG_TYPE_STRING = ArgTypes.STRING;
     @SuppressWarnings("null")
     private static final @Nonnull SingleArgumentType<PublicGameProfile> ARG_TYPE_PUB_PROFILE = ArgTypes.GAME_PROFILE_LOOKUP;
@@ -157,6 +155,11 @@ public class HomeCommand extends AbstractAsyncCommand {
         return true;
     }
 
+    @SuppressWarnings("null")
+    private static @Nonnull <T> CompletableFuture<T> completedFuture() {
+        return CompletableFuture.completedFuture(null);
+    }
+
     private static Void logException(Throwable ex) {
         HomePlugin.LOGGER.atWarning().log(ex.getMessage());
         return null;
@@ -169,24 +172,24 @@ public class HomeCommand extends AbstractAsyncCommand {
         Function<UUID, PlayerHomeResult> targetHomeFn,
         BiFunction<PlayerHomeResult, PlayerMetaData, String> formatErrFn
     ) {
-        if (!requirePlayer(context)) return COMPLETED_FUTURE;
+        if (!requirePlayer(context)) return completedFuture();
 
         Ref<EntityStore> ref = Objects.requireNonNull(context.senderAsPlayerRef());
 
         PlayerMetaData targetPlayer = targetPlayerDataFn.get();
-        if (targetPlayer == null) return COMPLETED_FUTURE;
+        if (targetPlayer == null) return completedFuture();
 
         PlayerHomeResult playerHomeRes = targetHomeFn.apply(targetPlayer.getUuid());
-        if (playerHomeRes == null) return COMPLETED_FUTURE;
+        if (playerHomeRes == null) return completedFuture();
 
         if (playerHomeRes.isError()) {
             @SuppressWarnings("null")
             @Nonnull String formattedErr = formatErrFn.apply(playerHomeRes, targetPlayer);
             context.sendMessage(HomePlugin.formatPlayerMessage(formattedErr));
-            return COMPLETED_FUTURE;
+            return completedFuture();
         }
 
-        HomeLocation playerHome = (HomeLocation)((PlayerHomeResult.Success<?>)playerHomeRes).get();
+        HomeLocation playerHome = (HomeLocation)((PlayerHomeResult.Success<?>)playerHomeRes).inner();
         String homeWorld = playerHome.getWorld();
 
         Store<EntityStore> store = ref.getStore();
@@ -196,7 +199,7 @@ public class HomeCommand extends AbstractAsyncCommand {
 
         if (targetWorld == null) {
             context.sendMessage(Message.translation(WORLD_NOT_LOADED));
-            return COMPLETED_FUTURE;
+            return completedFuture();
         }
 
         world.execute(() -> {
@@ -206,7 +209,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             store.addComponent(ref, COMPONENT_TYPE_TELEPORT, playerTeleport);
         });
 
-        return COMPLETED_FUTURE;
+        return completedFuture();
     }
 
     /// Only to be used with `PlayerHomeManager` methods that have a return value of `PlayerHomeResult.Modification`.
@@ -232,13 +235,13 @@ public class HomeCommand extends AbstractAsyncCommand {
         @Nullable Supplier<PlayerMetaData> targetPlayerDataFn
     ) {
         boolean isPlayerCmd = targetPlayerDataFn == null;
-        if (isPlayerCmd && !requirePlayer(context)) return CompletableFuture.completedFuture(null);
+        if (isPlayerCmd && !requirePlayer(context)) return completedFuture();
 
         String homeName = getValidatedHomeName(context, homeNameArg);
-        if (homeName == null) return CompletableFuture.completedFuture(null);
+        if (homeName == null) return completedFuture();
 
         PlayerMetaData targetPlayer = isPlayerCmd ? PlayerMetaData.fromSender(context.sender()) : targetPlayerDataFn.get();
-        if (targetPlayer == null) return CompletableFuture.completedFuture(null);
+        if (targetPlayer == null) return completedFuture();
 
         PlayerHomeResult result = modifyFn.apply(homeName, targetPlayer.getUuid());
 
@@ -315,7 +318,7 @@ public class HomeCommand extends AbstractAsyncCommand {
         }
 
         private @Nonnull CompletableFuture<Void> executeListHomes(@Nonnull CommandContext context) {
-            if (!requirePlayer(context)) return COMPLETED_FUTURE;
+            if (!requirePlayer(context)) return completedFuture();
 
             UUID senderID = Objects.requireNonNull(context.sender().getUuid());
             boolean verbose = verboseArg.get(context);
@@ -323,7 +326,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             PlayerHomeResult result = playerHomes.list(senderID, verbose);
             context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
 
-            return COMPLETED_FUTURE;
+            return completedFuture();
         }
     }
 
@@ -351,7 +354,7 @@ public class HomeCommand extends AbstractAsyncCommand {
             PlayerHomeResult result = playerHomes.list(playerData.getUuid(), verbose);
             context.sendMessage(HomePlugin.formatPlayerMessage(result.display(playerData)));
 
-            return COMPLETED_FUTURE;
+            return completedFuture();
         }
     }
 
@@ -372,10 +375,10 @@ public class HomeCommand extends AbstractAsyncCommand {
         }
 
         private @Nonnull CompletableFuture<Void> executeSetHome(@Nonnull CommandContext context) {
-            if (!requirePlayer(context)) return COMPLETED_FUTURE;
+            if (!requirePlayer(context)) return completedFuture();
 
             String homeName = getValidatedHomeName(context, homeNameArg);
-            if (homeName == null) return COMPLETED_FUTURE;
+            if (homeName == null) return completedFuture();
 
             Ref<EntityStore> ref = Objects.requireNonNull(context.senderAsPlayerRef());
             UUID playerID = Objects.requireNonNull(context.sender().getUuid());
@@ -389,7 +392,7 @@ public class HomeCommand extends AbstractAsyncCommand {
                 context.sendMessage(HomePlugin.formatPlayerMessage(result.display()));
             });
 
-            return COMPLETED_FUTURE;
+            return completedFuture();
         }
     }
 
@@ -458,7 +461,7 @@ public class HomeCommand extends AbstractAsyncCommand {
                 if (result.isSuccess()) {
                     PlayerRef player = Universe.get().getPlayer(playerData.getUuid());
                     if (player != null && player.isValid()) {
-                        PlayerHomeResult.Modification mod = (PlayerHomeResult.Modification)((PlayerHomeResult.Success<?>)result).get();
+                        PlayerHomeResult.Modification mod = (PlayerHomeResult.Modification)((PlayerHomeResult.Success<?>)result).inner();
                         player.sendMessage(HomePlugin.formatPlayerMessage("Your home '%s', was removed by an Admin".formatted(mod.homeID())));
                     }
                 }

@@ -85,7 +85,7 @@ public sealed interface PlayerHomeResult {
             };
         }
 
-        public @Nonnull T get() {
+        public @Nonnull T inner() {
             return value;
         }
     }
